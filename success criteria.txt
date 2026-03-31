@@ -22,3 +22,13 @@ Success criteria (planned, may change)
 10. An admin can send a system-wide message visible to all users: immediately if the user is logged in, or upon their next login.
 
 11. All user data is stored persistently in a database, and the application can be self-hosted by a school on their own server.
+
+Teacher comments
+----------------
+
+2. do we need multiple admins?
+4. are assignments tied to specific classroom?
+6. can teacher see percentages?
+8. any kind of binary files?
+11. persistent storage assumed, so can be removed; 11 perhaps not
+    necessary overall
