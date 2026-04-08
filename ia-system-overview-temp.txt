@@ -1,0 +1,32 @@
+                         ━━━━━━━━━━━━━━━━━━━━━
+                          SYSTEM OVERVIEW (C)
+                         ━━━━━━━━━━━━━━━━━━━━━
+
+
+Introduction
+════════════
+
+  Copy this file into your IA project. Address all items below, removing
+  each item once addressed. Finally remove this first section, save the
+  file, and push onto GitHub.
+
+
+UI
+══
+
+
+UML
+═══
+
+
+Algorithms
+══════════
+
+  [bulleted list with indentations (recommended); or pseudocode]
+
+
+Test plan
+═════════
+
+  [both 1. functional tests against success criteria
+  1. correctness tests for major algorithms]
