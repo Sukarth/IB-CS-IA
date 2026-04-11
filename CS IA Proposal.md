@@ -1,68 +1,101 @@
-                            ━━━━━━━━━━━━━━━━
-                             CS IA PROPOSAL
-                            ━━━━━━━━━━━━━━━━
+<h1 style="text-align: center;">CS IA PROPOSAL</h1>
 
+**Status:** Planned (may change)
 
-Project title
-═════════════
+## Project Title
 
-Homework assignment and tracking system
+Assignment Management and Tracking System
 
-Problem description
-═══════════════════
+---
 
-In our school, there is no automated system for assigning homework and tracking its completion. Currently teachers are using varying platforms and manual work, such as Microsoft OneNote, Opiq, Showbie, Managebac and paper handouts. Particularly, neither teachers nor students can effectively track completion of homework. This problem requires a purpose built digital solution, as the usage and management of paper is prone to error, apart from being cumbersome and time consuming.
-               
-The solution will allow teachers to assign homework, students to mark homework completion, and both teachers and students to track homework completion.
+## Problem Description
 
-To my knowledge there is currently no software available that is refined and purpose built for this problem. Furthermore, privacy issues require a solution over which the school has full control.
+In our school, there is no automated system for assigning homework and tracking its completion. Currently, teachers use varying platforms and manual work, such as Microsoft OneNote, Opiq, Showbie, Managebac, and paper handouts. Specifically, neither teachers nor students can effectively track the completion of homework. This problem requires a purpose-built digital solution, as the usage and management of paper is prone to error, apart from being cumbersome and time-consuming.
+
+The solution will allow:
+- Teachers to assign homework
+- Students to mark homework completion
+- Both teachers and students to track homework completion
+
+To the best of my knowledge, there is currently no refined, purpose-built software available for this problem. Furthermore, privacy concerns require a solution over which the school has full control.
+
+### Benefits
 
 This solution will be a significant improvement for both students and teachers in a number of ways. It will save time for both parties by getting rid of multiple different systems and/or pieces of paper. Students will have a single place to keep track of assigned homework and its completion, due to a unified system for all their courses. This system will thus provide teachers with knowledge of which problems have been easy and which hard, allowing for more effective lessons and guidance. Additionally, teachers will have overall course completion rates for all the students, which can be used for course assessment.
 
-The software solution:
-══════════════════════
+---
 
-A website that is a management app built specifically for schools and their ease of use (self hostable, distributable (backend (DB) + frontend), which is similar in concept to Managebac or Google Classroom, but not exactly the same.
+## Solution Platform
 
-Requirements/specifications/success criteria:
-═════════════════════════════════════════════
+A self-hostable web-based application built specifically for schools, containing:
+- Both backend (database) and frontend components for easy distribution
+- Conceptual similarity to Managebac or Google Classroom, but purpose-built specifically for homework management
+- Support for schools to self-host on their own servers
 
-It should have an admin portal, where the admin can manage all app functions for the school (assign roles, etc)
+A web-based application (website) is an appropriate platform due to its accessibility: users can access the system from any device with an internet connection (such as phones, tablets, and laptops), without needing to download and install an app. Additionally, the website and database server can be self-hosted by the school relatively easily, without needing to worry about app store distribution or compatibility with different operating systems (as with mobile or desktop apps).
 
-3 roles: teacher, student, admin
+---
 
-login/signup based on email address with verification
+## Requirements & Specifications
 
-there should be different interface + functions for teachers and students
+### Core Features
 
-should be focused on maximum user usability even for those not knowing tech much, while also being visually appealing (modern UI design). Main theme color should be blue.
+- **Admin Portal**: Administrators can manage all app functions for the school (assign roles, etc.)
+- **Role-Based System**: Three roles available: teacher, student, and admin
+- **Authentication**: Login/signup based on email address with email verification
+- **User Interface**: Different interfaces and functions for teachers and students, focused on maximum usability for non-technical users, while being visually appealing with a modern UI/UX design
 
-Key role specific requirements:
--------------------------------
+### Teacher Capabilities
 
-teachers should be able to (add, edit, delete):
-- create/edit/delete classrooms and add/remove students to them.
-- assign homework, add materials, add comments, images, pdfs, documents (docs, slides, code, etc), links
-- registry/content library, organization, tables, schedules, lesson plans, lesson notes, units, criterion
-- view students' details, info, progress on assignments/work, etc
-- view students' submitted work for assignments, add comments on work, and more
+Teachers should be able to:
 
-students should be able to:
-- view all required info and materials
-- add comments/questions in places (if allowed by teacher)
-- have access to discussions or discussion threads (if allowed by teacher)
-    - where teacher can also see and reply
-- submit work to assignments, and/or mark their progress on assignments, and add comments/questions directly to the teacher
-- allowed to mark and track their progress in different places, like assignments, any material added by teacher, units, etc (to act like a study tracker of what all they have learnt/studied and to what level/extent --> sort of like a todo list for themselves)
-    - should also be visible to teacher
-- should have access to a homepage with calendar, tasks, todo list (can add custom items & schedule/time/deadlines & labels/filters & notes, but also has items automatically added based on status (check previous point)(allow disabling/enabling feature)) and panel with (new) messages for them to check and an updates/notification area (ex: new assignment added by a teacher, etc), along with a system messages area (if admin wants to send any info/messages, etc like system maintenance times or other school wide events etc)
+**Manage Classrooms**
+- Create, edit, and delete classrooms
+- Add and remove students from classrooms
 
-admins should be able to:
-- configure and categorize students into 'years' or grades, so they can be better managed: 
-  - ex scheduling system or general events for the whole group or sending a system message
+**Assign & Manage Materials**
+- Assign homework
+- Add materials, comments, images, PDFs, documents (docs, slides, code, etc.), and links
+- Manage content library, organization, tables, schedules, lesson plans, lesson notes, units, and criteria
 
-Solution platform
-═════════════════
+**Monitor Students**
+- View student details, information, and progress on assignments/work
+- View students' submitted work for assignments
+- Add comments on submitted work
 
-Solution will be a website with a connection to a database server. This
-is an appropriate platform, since the software can run and be used on a variety of devices such as phones, tablets, and laptops. The website and database server can be self-hosted by the school.
+### Student Capabilities
+
+Students should be able to:
+
+**Access Materials**
+- Access their classrooms and assignments
+- View all required information and materials
+- Add comments/questions in allowed places
+
+**Communicate**
+- Access discussions or discussion threads (if allowed by teacher)
+- Submit work to assignments and/or mark progress on assignments
+- Add comments/questions directly to the teacher
+
+**Track Progress**
+- Mark and track progress in different places (assignments, materials, units, etc.)
+- Use the system as a personal study tracker for learned/studied content and level of mastery
+- Use the system to manage tasks similar to a to-do list
+
+**Access Homepage Features**
+- Calendar displaying upcoming deadlines
+- Tasks and to-do list (customizable with schedule, time, deadlines, labels, filters, and notes)
+    - Automatic population of items based on assignment status (toggleable)
+- Notification/updates panel for new messages or events (e.g., new assignment added by teacher)
+- System messages area (admin announcements, maintenance notices, school-wide events)
+
+### Admin Capabilities
+
+Administrators should be able to:
+
+- Configure and categorize students into 'years' or grades for better management
+- Schedule system-wide events or announcements
+- Send system messages to specific student groups
+- Manage all organizational and user management functions
+
+---
