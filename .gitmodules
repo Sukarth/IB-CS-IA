@@ -1,0 +1,3 @@
+[submodule "ib-cs-ia-guide"]
+	path = ib-cs-ia-guide
+	url = https://git.sr.ht/~jarmo/ib-cs-ia
