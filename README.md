@@ -1,6 +1,12 @@
 # IB Computer Science Internal Assessment
 
+**Assignment Management and Tracking System**
+
 This is the repo for my IB Computer Science Internal Assessment. It contains the code for my project, as well as any relevant documentation and resources.
+
+- the proposal is located in [Proposal.md](Proposal.md)
+- the success criteria is located in [Success Criteria.md](Success%20Criteria.md).
+- the plan is located in [Plan.md](Plan.md)
 
 ## Important Note
 
@@ -21,7 +27,7 @@ To simply sync/pull the latest changes from the submodule, use:
 ```bash
 git submodule update --remote --merge --recursive
 ```
-Note: run this command from the root of the repository, not from within the submodule directory.
+   - Note: run this command from the root of the repository, not from within the submodule directory.
 
 Or, you can navigate to the submodule directory and pull the latest changes:
 

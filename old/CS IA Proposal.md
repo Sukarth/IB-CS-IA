@@ -19,11 +19,9 @@ The solution will allow:
 
 To the best of my knowledge, there is currently no refined, purpose-built software available for this problem. Furthermore, privacy concerns require a solution over which the school has full control.
 
-### Benefits
+## Benefits/Impact
 
 This solution will be a significant improvement for both students and teachers in a number of ways. It will save time for both parties by getting rid of multiple different systems and/or pieces of paper. Students will have a single place to keep track of assigned homework and its completion, due to a unified system for all their courses. This system will thus provide teachers with knowledge of which problems have been easy and which hard, allowing for more effective lessons and guidance. Additionally, teachers will have overall course completion rates for all the students, which can be used for course assessment.
-
----
 
 ## Solution Platform
 
@@ -32,7 +30,7 @@ A self-hostable web-based application built specifically for schools, containing
 - Conceptual similarity to Managebac or Google Classroom, but purpose-built specifically for homework management
 - Support for schools to self-host on their own servers
 
-A web-based application (website) is an appropriate platform due to its accessibility: users can access the system from any device with an internet connection (such as phones, tablets, and laptops), without needing to download and install an app. Additionally, the website and database server can be self-hosted by the school relatively easily, without needing to worry about app store distribution or compatibility with different operating systems (as with mobile or desktop apps).
+A web-based application (website) is an appropriate platform for this software due to its accessibility: users can access the system from any device with an internet connection (such as phones, tablets, and laptops), without needing to download and install an app. Additionally, the website and database server can be self-hosted by the school relatively easily, without needing to worry about app store distribution or compatibility with different operating systems (as with mobile or desktop apps).
 
 ---
 
