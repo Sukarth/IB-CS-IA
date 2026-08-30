@@ -1,0 +1,320 @@
+# SYSTEM OVERVIEW (Criterion C)
+
+## UI
+
+![UI Wireframe/Storyboard](UI/UI.jpg)
+
+## UML
+
+### Core UML
+PNG:
+![Core UML PNG](UML/Core/CoreUML.png)
+
+SVG:
+![Core UML SVG](UML/Core/CoreUML.drawio.svg)
+
+```mermaid
+classDiagram
+direction LR
+
+class UserRole {
+  <<enumeration>>
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+class ProgressStatus {
+  <<enumeration>>
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  NEEDS_HELP
+}
+
+class AssignmentType {
+  <<enumeration>>
+  ESSAY
+  PROBLEMSET
+  PROJECT
+}
+
+class User {
+  <<abstract>>
+  +id: int
+  +name: string
+  +email: string
+  +password_hash: string
+  +role: UserRole
+  +is_active: boolean
+  +created_at: datetime
+  +get_by_id(id: int)$ User
+  +authenticate(email: string, password: string)$ User
+  +register(name: string, email: string, password: string, activation_key: string)$ User
+  +update_profile(name: string, email: string)
+  +change_password(old_password: string, new_password: string)
+  +deactivate()
+}
+
+class Student {
+  +year_group_id: int | None = None
+  +get_enrolled_classrooms() List~Classroom~
+  +set_status(assignment: Assignment, status: ProgressStatus)
+  +request_help(assignment: Assignment, message: string, urgent: boolean)
+  +submit_work(assignment: Assignment) Submission
+}
+
+class Teacher {
+  +owned_classrooms: List~Classroom~
+  +create_classroom(name: string, description: string) Classroom
+  +get_help_queue() Queue
+  +get_priority_queue() PriorityQueue
+}
+
+class Admin {
+  +list_users(role: UserRole) List~User~
+  +list_classrooms() List~Classroom~
+}
+
+class ActivationKey {
+  +id: int
+  +key_hash: string
+  +role_to_assign: UserRole
+  +year_group_id: int | None = None
+  +created_by_id: int
+  +created_at: datetime
+  +expires_at: datetime
+  +is_used: boolean
+  +used_by_id: int | None = None
+  +used_at: datetime | None = None
+  +generate(role: UserRole, created_by: Admin, valid_days: int, year_group_id: int | None = None)$ string
+  +generate_batch(role: UserRole, count: int, created_by: Admin, valid_days: int, year_group_id: int | None = None)$ List~string~
+  +validate(activation_key: string)$ ActivationKey
+  +mark_used(user: User)
+  +delete()
+}
+
+class YearGroup {
+  +id: int
+  +name: string
+  +create(name: string)$ YearGroup
+  +rename(new_name: string)
+  +add_student(student: Student)
+  +remove_student(student: Student)
+  +get_students() List~Student~
+  +delete()
+}
+
+class Classroom {
+  +id: int
+  +name: string
+  +description: string
+  +teacher_id: int
+  +is_archived: boolean
+  +students: List~Student~
+  +assignments: List~Assignment~
+  +materials: List~Material~
+  +get_by_id(id: int)$ Classroom
+  +create(name: string, description: string, teacher: Teacher)$ Classroom
+  +update(name: string, description: string)
+  +archive()
+  +enroll_student(student: Student)
+  +unenroll_student(student: Student)
+  +add_material(title: string, description: string, uploaded_by: User) Material
+}
+
+class Enrollment {
+  +id: int
+  +joined_at: datetime
+  +classroom_id: int
+  +student_id: int
+}
+
+class Assignment {
+  <<abstract>>
+  +id: int
+  +classroom_id: int
+  +title: string
+  +description: string
+  +deadline: datetime
+  +effort_hours: float
+  +difficulty: int
+  +is_published: boolean
+  +get_by_id(id: int)$ Assignment
+  +update(title: string, description: string, deadline: datetime, effort_hours: float, difficulty: int)
+  +publish()
+  +unpublish()
+  %% only deletes if the assignment has no submissions or help requests. Unpublished otherwise:
+  +delete() 
+  +get_completion() CompletionStats
+  +days_remaining() int
+  +get_type() AssignmentType
+  +get_type_specific_details() dict
+  +split_effort() List~WorkChunk~
+}
+
+class WorkChunk {
+  +label: string
+  +hours: float
+}
+
+class Essay {
+  +word_limit: int
+  +create(classroom: Classroom, title: string, description: string, deadline: datetime, effort_hours: float, difficulty: int, word_limit: int)$ Essay
+  +get_type_specific_details() dict
+  +split_effort() List~WorkChunk~
+}
+
+class ProblemSet {
+  +number_of_problems: int
+  +create(classroom: Classroom, title: string, description: string, deadline: datetime, effort_hours: float, difficulty: int, number_of_problems: int)$ ProblemSet
+  +get_type_specific_details() dict
+  +split_effort() List~WorkChunk~
+}
+
+class Project {
+  +min_group_size: int
+  +max_group_size: int
+  +create(classroom: Classroom, title: string, description: string, deadline: datetime, effort_hours: float, difficulty: int, min_group_size: int, max_group_size: int)$ Project
+  +get_type_specific_details() dict
+  +split_effort() List~WorkChunk~
+}
+
+class CompletionStats {
+  +total_students: int
+  +completion_count: int
+  +completion_percentage: float
+  +completed_students: List~Student~
+  +pending_students: List~Student~
+  +first_submission_at: datetime | None = None 
+  +last_submission_at: datetime | None = None 
+}
+
+class Material {
+  +id: int
+  +classroom_id: int
+  +title: string
+  +description: string
+  +uploaded_by: int
+  +attachments: List~Attachment~
+  +create(classroom: Classroom, title: string, description: string, uploaded_by: User)$ Material
+  +update(title: string, description: string)
+  +attach_file(stored_filename: string, original_filename: string, mime_type: string, file_size_kb: int, uploaded_by: User) FileAttachment
+  +attach_link(url: string, link_title: string, uploaded_by: User) LinkAttachment
+  +remove_attachment(attachment: Attachment)
+  +delete()
+}
+
+class Attachment {
+  <<abstract>>
+  +id: int
+  +uploaded_by: int
+  +uploaded_at: datetime
+  +delete()
+}
+
+class FileAttachment {
+  +stored_filename: string
+  +original_filename: string
+  +mime_type: string
+  +file_size_kb: int
+}
+
+class LinkAttachment {
+  +url: string
+  +link_title: string
+}
+
+class ProgressRecord {
+  +id: int
+  +student_id: int
+  +assignment_id: int
+  +status: ProgressStatus
+  +status_changed_at: datetime
+  +notes: string
+  +get_progress(student: Student, assignment: Assignment)$ ProgressRecord
+  +set_status(status: ProgressStatus)
+  +add_note(note: string)
+}
+
+class Submission {
+  +id: int
+  +student_id: int
+  +assignment_id: int
+  +submitted_at: datetime
+  +version: int
+  +feedback: string
+  +attachments: List~Attachment~
+  +create(student: Student, assignment: Assignment)$ Submission
+  +attach_file(stored_filename: string, original_filename: string, mime_type: string, file_size_kb: int) FileAttachment
+  +attach_link(url: string, link_title: string) LinkAttachment
+  +add_feedback(feedback: string)
+}
+
+class HelpRequest {
+  +id: int
+  +student_id: int
+  +assignment_id: int
+  +message: string
+  +created_at: datetime
+  +is_urgent: boolean
+  +resolved_at: datetime | None = None 
+  +resolution_notes: string | None = None 
+  +resolved_by_id: int | None = None
+  +create(student: Student, assignment: Assignment, message: string, is_urgent: boolean)$ HelpRequest
+  +days_remaining() int
+  +resolve(teacher: Teacher, resolution_notes: string)
+}
+
+User <|-- Student
+User <|-- Teacher
+User <|-- Admin
+Assignment <|-- Essay
+Assignment <|-- ProblemSet
+Assignment <|-- Project
+Attachment <|-- FileAttachment
+Attachment <|-- LinkAttachment
+
+Teacher "1" --> "0..*" Classroom : owns
+Classroom "1" *-- "0..*" Enrollment : enrolls
+Student "1" --> "0..*" Enrollment : is enrolled in
+Student "0..*" --> "0..1" YearGroup : belongs to
+Classroom "1" *-- "0..*" Assignment : contains
+Classroom "1" *-- "0..*" Material : contains
+Assignment ..> CompletionStats : lists
+Material "1" *-- "0..*" Attachment : attaches
+Submission "1" *-- "0..*" Attachment : attaches
+Student "1" --> "0..*" ProgressRecord : records
+Assignment "1" --> "0..*" ProgressRecord : lists
+Student "1" --> "0..*" Submission : submits
+Assignment "1" --> "0..*" Submission : receives
+Student "1" --> "0..*" HelpRequest : creates
+Assignment "1" --> "0..*" HelpRequest : lists
+Teacher ..> HelpRequest : resolves
+Admin ..> ActivationKey : generates
+ProgressRecord ..> ProgressStatus : indicates
+User ..> UserRole : has
+Assignment ..> AssignmentType : can have
+Assignment ..> WorkChunk : produces
+StudyScheduler ..> WorkChunk : schedules
+ActivationKey "0..*" --> "0..1" YearGroup : assigns on registration
+ActivationKey "0..1" --> "0..1" User : creates
+```
+
+### ADT & Algorithms UML
+
+![ADT & Algorithms UML](UML/ADT/ADTUML.png)
+
+## ERD
+
+![ERD](ERD.png)
+
+## Algorithms
+
+  [bulleted list with indentations (recommended); or pseudocode]
+
+
+## Test plan
+
+  [both 1. functional tests against success criteria
+  1. correctness tests for major algorithms]
