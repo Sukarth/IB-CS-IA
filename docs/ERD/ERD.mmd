@@ -1,0 +1,126 @@
+erDiagram
+    YEAR_GROUPS |o--o{ USERS : "assigned to"
+    USERS ||--o{ CLASSROOMS : "teaches"
+    CLASSROOMS ||--o{ ENROLLMENTS : "has"
+    USERS ||--o{ ENROLLMENTS : "joins"
+    CLASSROOMS ||--o{ ASSIGNMENTS : "contains"
+    CLASSROOMS ||--o{ MATERIALS : "stores"
+    USERS ||--o{ MATERIALS : "uploads"
+    MATERIALS ||--o{ ATTACHMENTS : "has"
+    USERS ||--o{ SUBMISSIONS : "submits"
+    ASSIGNMENTS ||--o{ SUBMISSIONS : "receives"
+    SUBMISSIONS ||--o{ ATTACHMENTS : "has"
+    USERS ||--o{ PROGRESS_RECORDS : "has"
+    ASSIGNMENTS ||--o{ PROGRESS_RECORDS : "tracked by"
+    USERS ||--o{ HELP_REQUESTS : "raises"
+    ASSIGNMENTS ||--o{ HELP_REQUESTS : "concerns"
+    USERS |o--o{ HELP_REQUESTS : "resolves"
+    USERS ||--o{ ACTIVATION_KEYS : "creates"
+    USERS |o--o{ ACTIVATION_KEYS : "uses"
+    YEAR_GROUPS |o--o{ ACTIVATION_KEYS : "tied to"
+
+    USERS {
+        int id PK
+        string name
+        string email UK
+        string password_hash
+        string role "STUDENT | TEACHER | ADMIN"
+        int year_group_id FK "nullable"
+        bool is_active
+        datetime created_at
+    }
+    ACTIVATION_KEYS {
+        int id PK
+        string key_hash UK
+        string role_to_assign "STUDENT | TEACHER | ADMIN"
+        int year_group_id FK "nullable"
+        int created_by_id FK
+        datetime created_at
+        datetime expires_at
+        bool is_used
+        int used_by_id FK "nullable"
+        datetime used_at "nullable"
+    }
+    YEAR_GROUPS {
+        int id PK
+        string name UK
+    }
+    CLASSROOMS {
+        int id PK
+        string name
+        string description
+        int teacher_id FK
+        datetime created_at
+        bool is_archived
+    }
+    ENROLLMENTS {
+        int id PK
+        int classroom_id FK
+        int student_id FK
+        datetime joined_at
+    }
+    ASSIGNMENTS {
+        int id PK
+        int classroom_id FK
+        string type "ESSAY | PROBLEMSET | PROJECT"
+        string title
+        string description
+        datetime deadline
+        float effort_hours
+        int difficulty "1-5"
+        bool is_published
+        datetime created_at
+        int word_limit "ESSAY only"
+        int number_of_problems "PROBLEMSET only"
+        int min_group_size "PROJECT only"
+        int max_group_size "PROJECT only"
+    }
+    MATERIALS {
+        int id PK
+        int classroom_id FK
+        string title
+        string description
+        int uploaded_by FK
+        datetime uploaded_at
+    }
+    SUBMISSIONS {
+        int id PK
+        int student_id FK
+        int assignment_id FK
+        datetime submitted_at
+        int version
+        string feedback
+    }
+    ATTACHMENTS {
+        int id PK
+        string kind "FILE | LINK"
+        int material_id FK "exactly one of material_id/submission_id (XOR)"
+        int submission_id FK "exactly one of submission_id/material_id (XOR)"
+        string stored_filename "FILE only. Uuid filename on server disk"
+        string original_filename "FILE only. Name shown to user"
+        string mime_type "FILE only"
+        int file_size_kb "FILE only"
+        string url "LINK only"
+        string link_title "LINK only"
+        int uploaded_by FK
+        datetime uploaded_at
+    }
+    PROGRESS_RECORDS {
+        int id PK
+        int student_id FK
+        int assignment_id FK
+        string status "NOT_STARTED | IN_PROGRESS | COMPLETED | NEEDS_HELP"
+        datetime status_changed_at
+        string notes
+    }
+    HELP_REQUESTS {
+        int id PK
+        int student_id FK
+        int assignment_id FK
+        string message
+        datetime created_at
+        bool is_urgent
+        datetime resolved_at "nullable"
+        int resolved_by_id FK "nullable"
+        string resolution_notes "nullable"
+    }

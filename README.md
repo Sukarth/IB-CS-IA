@@ -37,7 +37,9 @@ winget install JGraph.Draw
 Then, the following command can be used to export the diagrams to svg and png:
 
 ```bash
-cd .\docs\UML\ ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f svg --theme light -o Core/CoreUML.svg Core/CoreUML.drawio ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f png -s 1 --theme light -o Core/CoreUML.png Core/CoreUML.drawio ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f svg --theme light -o ADT/ADTUML.svg ADT/ADTUML.drawio ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f png -s 1 --theme light -o ADT/ADTUML.png ADT/ADTUML.drawio
+cd .\docs\UML\ ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f svg --theme light -o Core/CoreUML.svg Core/CoreUML.drawio ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f png -s 1 --theme light -o Core/CoreUML.png Core/CoreUML.drawio ;
+cd .\docs\UML\ ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f svg --theme light -o ADT/ADTUML.svg ADT/ADTUML.drawio ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f png -s 1 --theme light -o ADT/ADTUML.png ADT/ADTUML.drawio
+cd .\docs\ERD\ ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f svg --theme light -o docs/ERD/ERD.svg docs/ERD/ERD.drawio ; & "$env:LOCALAPPDATA\Programs\draw.io\draw.io.exe" -x -f png -s 1 --theme light -o docs/ERD/ERD.png docs/ERD/ERD.drawio
 
 ```
 
