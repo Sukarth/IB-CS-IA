@@ -3,6 +3,7 @@ docs/UML/~backup/
 # python
 __pycache__/
 *.pyc
+.venv
 
 *.bkp
 
