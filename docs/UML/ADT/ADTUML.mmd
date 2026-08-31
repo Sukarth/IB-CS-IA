@@ -1,0 +1,94 @@
+classDiagram
+direction LR
+
+class Node {
+  -data: Any
+  -next: Node | None = None
+  +#95;#95;init#95;#95;(data: Any)
+}
+
+class PriorityNode {
+  -priority: float
+  +#95;#95;init#95;#95;(data: Any, priority: float)
+}
+
+class LinkedList {
+  -head: Node | None = None
+  -tail: Node | None = None
+  -count: int = 0
+  +append(node: Node)
+  +insert_after(previous: Node | None, node: Node)
+  +remove_head() Node | None
+  +peek_head() Node | None
+  +traverse() list~Node~
+  +size() int
+  +is_empty() bool
+}
+
+class Queue {
+  -items: LinkedList
+  +enqueue(item: Any)
+  +dequeue() Any | None
+  +peek() Any | None
+  +size() int
+  +is_empty() bool
+}
+
+class PriorityQueue {
+  -items: LinkedList
+  +enqueue(item: Any, priority: float)
+  +dequeue() Any | None
+  +peek() Any | None
+  +size() int
+  +is_empty() bool
+  -find_previous(priority: float) Node | None
+}
+
+class Stack {
+  -items: list
+  +push(item: Any)
+  +pop() Any | None
+  +peek() Any | None
+  +size() int
+  +is_empty() bool
+}
+
+class BubbleSorter {
+  +sort(records: list, key: function) list$
+}
+
+class BinarySearcher {
+  +search(sorted_items: list, query: str, key: function) int$
+}
+
+class StudyPlan {
+  +days: dict
+  +warnings: list~str~
+}
+
+class StudyScheduler {
+  +generate_schedule(student: Student, weekly_hours: list~float~) StudyPlan
+  +calculate_urgency(assignment: Assignment) float
+  -build_priority_queue(assignments: list~Assignment~) PriorityQueue
+  -allocate_chunks(assignment: Assignment, plan: StudyPlan, weekly_hours: list~float~)
+  -validate_weekly_hours(weekly_hours: list~float~) bool
+}
+
+
+PriorityNode --|> Node
+LinkedList *-- "0..*" Node : contains
+Queue *-- "1" LinkedList : wraps
+PriorityQueue *-- "1" LinkedList : wraps
+PriorityQueue ..> PriorityNode : creates
+Queue ..> "0..*" HelpRequest : stores
+PriorityQueue ..> "0..*" HelpRequest : stores
+PriorityQueue ..> "0..*" Assignment : stores
+StudyScheduler ..> PriorityQueue : creates
+StudyScheduler ..> StudyPlan : generates
+StudyScheduler ..> Assignment : reads
+StudyScheduler ..> WorkChunk : allocates
+StudyScheduler ..> ProgressRecord : filters
+BubbleSorter ..> CompletionStats : sorts
+BinarySearcher ..> Student : searches
+BinarySearcher ..> Assignment : searches
+Stack ..> "0..*" Notification : stores (optional)

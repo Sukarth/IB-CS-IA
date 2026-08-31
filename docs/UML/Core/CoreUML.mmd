@@ -26,85 +26,85 @@ class AssignmentType {
 class User {
   <<abstract>>
   +id: int
-  +name: string
-  +email: string
-  +password_hash: string
+  +name: str
+  +email: str
+  +password_hash: str
   +role: UserRole
-  +is_active: boolean
+  +is_active: bool
   +created_at: datetime
-  +get_by_id(id: int)$ User
-  +authenticate(email: string, password: string)$ User
-  +register(name: string, email: string, password: string, activation_key: string)$ User
-  +update_profile(name: string, email: string)
-  +change_password(old_password: string, new_password: string)
+  +get_by_id(id: int) User$
+  +authenticate(email: str, password: str) User$
+  +register(name: str, email: str, password: str, activation_key: str) User$
+  +update_profile(name: str, email: str)
+  +change_password(old_password: str, new_password: str)
   +deactivate()
 }
 
 class Student {
   +year_group_id: int | None = None
-  +get_enrolled_classrooms() List~Classroom~
+  +get_enrolled_classrooms() list~Classroom~
   +set_status(assignment: Assignment, status: ProgressStatus)
-  +request_help(assignment: Assignment, message: string, urgent: boolean)
+  +request_help(assignment: Assignment, message: str, urgent: bool)
   +submit_work(assignment: Assignment) Submission
 }
 
 class Teacher {
-  +owned_classrooms: List~Classroom~
-  +create_classroom(name: string, description: string) Classroom
+  +owned_classrooms: list~Classroom~
+  +create_classroom(name: str, description: str) Classroom
   +get_help_queue() Queue
   +get_priority_queue() PriorityQueue
 }
 
 class Admin {
-  +list_users(role: UserRole) List~User~
-  +list_classrooms() List~Classroom~
+  +list_users(role: UserRole) list~User~
+  +list_classrooms() list~Classroom~
 }
 
 class ActivationKey {
   +id: int
-  +key_hash: string
+  +key_hash: str
   +role_to_assign: UserRole
   +year_group_id: int | None = None
   +created_by_id: int
   +created_at: datetime
   +expires_at: datetime
-  +is_used: boolean
+  +is_used: bool
   +used_by_id: int | None = None
   +used_at: datetime | None = None
-  +generate(role: UserRole, created_by: Admin, valid_days: int, year_group_id: int | None = None)$ string
-  +generate_batch(role: UserRole, count: int, created_by: Admin, valid_days: int, year_group_id: int | None = None)$ List~string~
-  +validate(activation_key: string)$ ActivationKey
+  +generate(role: UserRole, created_by: Admin, valid_days: int, year_group_id: int | None = None) str$
+  +generate_batch(role: UserRole, count: int, created_by: Admin, valid_days: int, year_group_id: int | None = None) list~str~$
+  +validate(activation_key: str) ActivationKey$
   +mark_used(user: User)
   +delete()
 }
 
 class YearGroup {
   +id: int
-  +name: string
-  +create(name: string)$ YearGroup
-  +rename(new_name: string)
+  +name: str
+  +create(name: str) YearGroup$
+  +rename(new_name: str)
   +add_student(student: Student)
   +remove_student(student: Student)
-  +get_students() List~Student~
+  +get_students() list~Student~
   +delete()
 }
 
 class Classroom {
   +id: int
-  +name: string
-  +description: string
+  +name: str
+  +description: str
   +teacher_id: int
-  +is_archived: boolean
-  +students: List~Student~
-  +assignments: List~Assignment~
-  +materials: List~Material~
-  +get_by_id(id: int)$ Classroom
-  +create(name: string, description: string, teacher: Teacher)$ Classroom
-  +update(name: string, description: string)
+  +is_archived: bool
+  +students: list~Student~
+  +assignments: list~Assignment~
+  +materials: list~Material~
+  +get_by_id(id: int) Classroom$
+  +create(name: str, description: str, teacher: Teacher) Classroom$
+  +update(name: str, description: str)
   +archive()
   +enroll_student(student: Student)
   +unenroll_student(student: Student)
-  +add_material(title: string, description: string, uploaded_by: User) Material
+  +add_material(title: str, description: str, uploaded_by: User) Material
 }
 
 class Enrollment {
@@ -118,14 +118,14 @@ class Assignment {
   <<abstract>>
   +id: int
   +classroom_id: int
-  +title: string
-  +description: string
+  +title: str
+  +description: str
   +deadline: datetime
   +effort_hours: float
   +difficulty: int
-  +is_published: boolean
-  +get_by_id(id: int)$ Assignment
-  +update(title: string, description: string, deadline: datetime, effort_hours: float, difficulty: int)
+  +is_published: bool
+  +get_by_id(id: int) Assignment$
+  +update(title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int)
   +publish()
   +unpublish()
   %% only deletes if the assignment has no submissions or help requests. Unpublished otherwise:
@@ -134,42 +134,42 @@ class Assignment {
   +days_remaining() int
   +get_type() AssignmentType
   +get_type_specific_details() dict
-  +split_effort() List~WorkChunk~
+  +split_effort() list~WorkChunk~
 }
 
 class WorkChunk {
-  +label: string
+  +label: str
   +hours: float
 }
 
 class Essay {
   +word_limit: int
-  +create(classroom: Classroom, title: string, description: string, deadline: datetime, effort_hours: float, difficulty: int, word_limit: int)$ Essay
+  +create(classroom: Classroom, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, word_limit: int) Essay$
   +get_type_specific_details() dict
-  +split_effort() List~WorkChunk~
+  +split_effort() list~WorkChunk~
 }
 
 class ProblemSet {
   +number_of_problems: int
-  +create(classroom: Classroom, title: string, description: string, deadline: datetime, effort_hours: float, difficulty: int, number_of_problems: int)$ ProblemSet
+  +create(classroom: Classroom, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, number_of_problems: int) ProblemSet$
   +get_type_specific_details() dict
-  +split_effort() List~WorkChunk~
+  +split_effort() list~WorkChunk~
 }
 
 class Project {
   +min_group_size: int
   +max_group_size: int
-  +create(classroom: Classroom, title: string, description: string, deadline: datetime, effort_hours: float, difficulty: int, min_group_size: int, max_group_size: int)$ Project
+  +create(classroom: Classroom, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, min_group_size: int, max_group_size: int) Project$
   +get_type_specific_details() dict
-  +split_effort() List~WorkChunk~
+  +split_effort() list~WorkChunk~
 }
 
 class CompletionStats {
   +total_students: int
   +completion_count: int
   +completion_percentage: float
-  +completed_students: List~Student~
-  +pending_students: List~Student~
+  +completed_students: list~Student~
+  +pending_students: list~Student~
   +first_submission_at: datetime | None = None 
   +last_submission_at: datetime | None = None 
 }
@@ -177,14 +177,14 @@ class CompletionStats {
 class Material {
   +id: int
   +classroom_id: int
-  +title: string
-  +description: string
+  +title: str
+  +description: str
   +uploaded_by: int
-  +attachments: List~Attachment~
-  +create(classroom: Classroom, title: string, description: string, uploaded_by: User)$ Material
-  +update(title: string, description: string)
-  +attach_file(stored_filename: string, original_filename: string, mime_type: string, file_size_kb: int, uploaded_by: User) FileAttachment
-  +attach_link(url: string, link_title: string, uploaded_by: User) LinkAttachment
+  +attachments: list~Attachment~
+  +create(classroom: Classroom, title: str, description: str, uploaded_by: User) Material$
+  +update(title: str, description: str)
+  +attach_file(stored_filename: str, original_filename: str, mime_type: str, file_size_kb: int, uploaded_by: User) FileAttachment
+  +attach_link(url: str, link_title: str, uploaded_by: User) LinkAttachment
   +remove_attachment(attachment: Attachment)
   +delete()
 }
@@ -198,15 +198,15 @@ class Attachment {
 }
 
 class FileAttachment {
-  +stored_filename: string
-  +original_filename: string
-  +mime_type: string
+  +stored_filename: str
+  +original_filename: str
+  +mime_type: str
   +file_size_kb: int
 }
 
 class LinkAttachment {
-  +url: string
-  +link_title: string
+  +url: str
+  +link_title: str
 }
 
 class ProgressRecord {
@@ -215,10 +215,10 @@ class ProgressRecord {
   +assignment_id: int
   +status: ProgressStatus
   +status_changed_at: datetime
-  +notes: string
-  +get_progress(student: Student, assignment: Assignment)$ ProgressRecord
+  +notes: str
+  +get_progress(student: Student, assignment: Assignment) ProgressRecord$
   +set_status(status: ProgressStatus)
-  +add_note(note: string)
+  +add_note(note: str)
 }
 
 class Submission {
@@ -227,27 +227,27 @@ class Submission {
   +assignment_id: int
   +submitted_at: datetime
   +version: int
-  +feedback: string
-  +attachments: List~Attachment~
-  +create(student: Student, assignment: Assignment)$ Submission
-  +attach_file(stored_filename: string, original_filename: string, mime_type: string, file_size_kb: int) FileAttachment
-  +attach_link(url: string, link_title: string) LinkAttachment
-  +add_feedback(feedback: string)
+  +feedback: str
+  +attachments: list~Attachment~
+  +create(student: Student, assignment: Assignment) Submission$
+  +attach_file(stored_filename: str, original_filename: str, mime_type: str, file_size_kb: int) FileAttachment
+  +attach_link(url: str, link_title: str) LinkAttachment
+  +add_feedback(feedback: str)
 }
 
 class HelpRequest {
   +id: int
   +student_id: int
   +assignment_id: int
-  +message: string
+  +message: str
   +created_at: datetime
-  +is_urgent: boolean
+  +is_urgent: bool
   +resolved_at: datetime | None = None 
-  +resolution_notes: string | None = None 
+  +resolution_notes: str | None = None 
   +resolved_by_id: int | None = None
-  +create(student: Student, assignment: Assignment, message: string, is_urgent: boolean)$ HelpRequest
+  +create(student: Student, assignment: Assignment, message: str, is_urgent: bool) HelpRequest$
   +days_remaining() int
-  +resolve(teacher: Teacher, resolution_notes: string)
+  +resolve(teacher: Teacher, resolution_notes: str)
 }
 
 User <|-- Student

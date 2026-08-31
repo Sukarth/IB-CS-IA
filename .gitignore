@@ -1,0 +1,11 @@
+docs/UML/~backup/
+
+# python
+__pycache__/
+*.pyc
+
+*.bkp
+
+# os
+Thumbs.db
+.DS_Store
