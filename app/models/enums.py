@@ -1,0 +1,17 @@
+from enum import Enum
+
+class UserRole(str, Enum):
+    STUDENT = 'STUDENT'
+    TEACHER = 'TEACHER'
+    ADMIN = 'ADMIN'
+
+class AssignmentType(str, Enum):
+    ESSAY = 'ESSAY'
+    PROBLEMSET = 'PROBLEMSET'
+    PROJECT = 'PROJECT'
+
+class ProgressStatus(str, Enum):
+    NOT_STARTED = 'NOT_STARTED'
+    IN_PROGRESS = 'IN_PROGRESS'
+    COMPLETED = 'COMPLETED'
+    NEEDS_HELP = 'NEEDS_HELP'
