@@ -36,7 +36,7 @@ class User:
 
         password_hash = cls._hash_password(password)
         
-        user_id = execute("INSERT INTO users (name, email, password_hash, role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+        user_id = execute("INSERT INTO USERS (name, email, password_hash, role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?)",
                 (name, email, password_hash, activation.role.value, True, datetime.now()))
         return cls.get_by_id(user_id)
 
@@ -86,7 +86,7 @@ class User:
         if not name:
             raise ValueError('name is required')
 
-        execute("UPDATE users SET name = ?, email = ? WHERE id = ?", (name, email, self.id))
+        execute("UPDATE USERS SET name = ?, email = ? WHERE id = ?", (name, email, self.id))
 
         self.name = name
         self.email = email
@@ -104,14 +104,14 @@ class User:
         
         new_password_hash = self._hash_password(new_password)
         
-        execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_password_hash, self.id))
+        execute("UPDATE USERS SET password_hash = ? WHERE id = ?", (new_password_hash, self.id))
         self.password_hash = new_password_hash
 
         return self
 
     def deactivate(self):
         # need to check if user has rights to perform this action? 
-        execute("UPDATE users SET is_active = ? WHERE id = ?", (False, self.id))
+        execute("UPDATE USERS SET is_active = ? WHERE id = ?", (False, self.id))
         self.is_active = False
         
         return self
