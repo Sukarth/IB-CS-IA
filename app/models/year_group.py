@@ -34,7 +34,9 @@ class YearGroup:
     def remove_student(self, student: User):
         if student.role != UserRole.STUDENT:
             raise ValueError("Only users with the STUDENT role can be removed from a year group!")
-        
+        if student.year_group_id != self.id:
+            raise ValueError("Student is not in this year group!")
+
         execute("UPDATE USERS SET year_group_id = NULL WHERE id = ?", (student.id,))
         return self
 
@@ -42,10 +44,12 @@ class YearGroup:
         rows = query("SELECT * FROM USERS WHERE year_group_id = ?", (self.id,))
         students = []
         for row in rows:
-            students.append(User(row['id'], row['name'], row['email'], row['password_hash'], UserRole(row['role']), bool(row['is_active']), datetime.fromisoformat(row['created_at'])))
+            students.append(User._from_row(row))
         return students
     
     def delete(self):
+        if self.get_students():
+            raise ValueError("Cannot delete a year group that has students assigned to it!")
         execute("DELETE FROM YEAR_GROUPS WHERE id = ?", (self.id,))
         return True
 

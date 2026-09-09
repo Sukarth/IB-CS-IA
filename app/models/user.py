@@ -41,12 +41,16 @@ class User:
         return cls.get_by_id(user_id)
 
     @classmethod
+    def _from_row(cls, row):
+        return cls(row['id'], row['name'], row['email'], row['password_hash'], UserRole(row['role']), bool(row['is_active']), datetime.fromisoformat(row['created_at']))
+
+    @classmethod
     def get_by_id(cls, id: int):
         row = query_one("SELECT * FROM USERS WHERE id = ?", (id,))
         if not row:
             return None
         
-        return cls(row['id'], row['name'], row['email'], row['password_hash'], UserRole(row['role']), row['is_active'], datetime.fromisoformat(row['created_at']))
+        return cls._from_row(row)
 
     @classmethod
     def get_by_email(cls, email: str):
@@ -54,7 +58,7 @@ class User:
         if not row:
             return None
         
-        return cls(row['id'], row['name'], row['email'], row['password_hash'], UserRole(row['role']), row['is_active'], datetime.fromisoformat(row['created_at']))
+        return cls._from_row(row)
 
     @classmethod
     def _hash_password(cls, password: str):
