@@ -60,12 +60,12 @@ class User:
         
         return cls._from_row(row)
 
-    @classmethod
-    def _hash_password(cls, password: str):
+    @staticmethod
+    def _hash_password(password: str):
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-    @classmethod
-    def _check_password(cls, password: str, password_hash: str):
+    @staticmethod
+    def _check_password(password: str, password_hash: str):
         return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
 
     @classmethod
