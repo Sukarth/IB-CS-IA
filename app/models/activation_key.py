@@ -1,8 +1,12 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
 from app.database import execute, query, query_one
 from datetime import datetime, timedelta
 from .enums import UserRole
-from .user import User
 import bcrypt
+
+if TYPE_CHECKING:
+    from .user import User
 
 class ActivationKey:
     def __init__(self, id: int, key_hash: str, role_to_assign: UserRole, created_by_id: int, created_at: datetime, expires_at: datetime, is_used: bool, year_group_id: int | None = None, used_by_id: int | None = None, used_at: datetime | None = None):
@@ -71,7 +75,7 @@ class ActivationKey:
         if self.expires_at < datetime.now():
             raise ValueError("Activation key has expired!")
         
-        execute("UPDATE ACTIVATION_KEYS SET (is_used = 1, used_by_id = ?, used_at = ?) WHERE id = ?", (used_by_user.id, datetime.now(), self.id))
+        execute("UPDATE ACTIVATION_KEYS SET is_used = 1, used_by_id = ?, used_at = ? WHERE id = ?", (used_by_user.id, datetime.now(), self.id))
         self.is_used = True
         self.used_by_id = used_by_user.id
         self.used_at = datetime.now()

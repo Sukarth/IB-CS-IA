@@ -2,6 +2,7 @@ from app.database import execute, query, query_one
 from datetime import datetime
 from .enums import UserRole
 from .user import User
+from .student import Student
 
 class YearGroup:
     def __init__(self, id: int, name: str):
@@ -24,16 +25,11 @@ class YearGroup:
         self.name = new_name
         return self
     
-    def add_student(self, student: User):
-        if student.role != UserRole.STUDENT:
-            raise ValueError("Only users with the STUDENT role can be added to a year group!")
-        
+    def add_student(self, student: Student):
         execute("UPDATE USERS SET year_group_id = ? WHERE id = ?", (self.id, student.id))
         return self
 
-    def remove_student(self, student: User):
-        if student.role != UserRole.STUDENT:
-            raise ValueError("Only users with the STUDENT role can be removed from a year group!")
+    def remove_student(self, student: Student):
         if student.year_group_id != self.id:
             raise ValueError("Student is not in this year group!")
 
@@ -44,7 +40,7 @@ class YearGroup:
         rows = query("SELECT * FROM USERS WHERE year_group_id = ?", (self.id,))
         students = []
         for row in rows:
-            students.append(User._from_row(row))
+            students.append(Student._from_row(row))
         return students
     
     def delete(self):

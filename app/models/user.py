@@ -76,7 +76,7 @@ class User:
             raise ValueError('password cannot be blank')
         user = cls.get_by_email(email)
         
-        if not user or cls._check_password(password, user.password_hash):
+        if not user or not cls._check_password(password, user.password_hash):
             raise ValueError('invalid email or password')
 
         if not user.is_active:
