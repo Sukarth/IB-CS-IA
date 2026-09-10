@@ -18,5 +18,5 @@ class Essay(Assignment):
       return cls.get_by_id(assignment_id)
       
   def get_type_specific_details(self):
-    return {'effort_hours': self.effort_hours, 'word_limit': self.word_limit}
+    return {'work_chunk': self.WorkChunk, 'word_limit': self.word_limit}
 
