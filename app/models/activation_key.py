@@ -33,10 +33,10 @@ class ActivationKey:
         # allow floats for valid_days?
         key = bcrypt.gensalt().decode('utf-8')
         key_hash = bcrypt.hashpw(key.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        expires_at = datetime.now() + timedelta(days=valid_days)
+        expires_at = datetime.now().isoformat() + str(timedelta(days=valid_days))
         
         execute("INSERT INTO ACTIVATION_KEYS (key_hash, role_to_assign, created_by_id, created_at, expires_at, is_used, used_by_id, used_at, year_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (key_hash, role_to_assign.value, created_by.value, datetime.now(), expires_at, False, None, None, year_group_id))
+                (key_hash, role_to_assign.value, created_by.value, datetime.now().isoformat(), expires_at, False, None, None, year_group_id))
         
         return key
     
@@ -60,7 +60,7 @@ class ActivationKey:
 
     @classmethod
     def validate(cls, activation_key: str):
-        row = query_one("SELECT * FROM ACTIVATION_KEYS WHERE is_used = 0 AND expires_at > ?", (datetime.now(),))
+        row = query_one("SELECT * FROM ACTIVATION_KEYS WHERE is_used = 0 AND expires_at > ?", (datetime.now().isoformat(),))
         if not row:
             return None
         
@@ -72,13 +72,13 @@ class ActivationKey:
     def mark_used(self, used_by_user: User):
         if self.is_used:
             raise ValueError("Activation key has already been used!")
-        if self.expires_at < datetime.now():
+        if self.expires_at < datetime.now().isoformat():
             raise ValueError("Activation key has expired!")
         
-        execute("UPDATE ACTIVATION_KEYS SET is_used = 1, used_by_id = ?, used_at = ? WHERE id = ?", (used_by_user.id, datetime.now(), self.id))
+        execute("UPDATE ACTIVATION_KEYS SET is_used = 1, used_by_id = ?, used_at = ? WHERE id = ?", (used_by_user.id, datetime.now().isoformat(), self.id))
         self.is_used = True
         self.used_by_id = used_by_user.id
-        self.used_at = datetime.now()
+        self.used_at = datetime.now().isoformat()
 
         return self
 

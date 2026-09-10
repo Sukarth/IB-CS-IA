@@ -1,5 +1,8 @@
 from .assignment import Assignment 
+from .enums import AssignmentType
 from .work_chunk import WorkChunk
+from datetime import datetime
+from app.database import execute, query, query_one
 
 class Project(Assignment):
   def __init__(self, id: int, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: int, difficulty: int, is_published: bool, min_group_size: int, max_group_size: int, type: AssignmentType | None = None):
@@ -8,7 +11,7 @@ class Project(Assignment):
     self.max_group_size = max_group_size
   
   @classmethod
-  def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, min_group_size: int, max_group_size: int, is_published: bool, type: AssignmentType | None = None):
+  def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, min_group_size: int, max_group_size: int, type: AssignmentType | None = None):
       super().create(classroom_id, title, description, deadline, effort_hours, difficulty, is_published)
       
       if min_group_size < 0:
@@ -23,4 +26,4 @@ class Project(Assignment):
       return cls.get_by_id(assignment_id)
       
   def get_type_specific_details(self):
-    return {'work_chunk': self.WorkChunk, 'min_group_size': self.min_group_size, 'max_group_size': self.max_group_size}
+    return {'work_chunk': self.work_chunk, 'min_group_size': self.min_group_size, 'max_group_size': self.max_group_size}

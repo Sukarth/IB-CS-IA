@@ -23,7 +23,7 @@ class Assignment:
             raise ValueError("Classroom does not exist!")
         if not title:
             raise ValueError("Assignment title cannot be blank!")
-        if not deadline or deadline < datetime.now():
+        if not deadline or deadline < datetime.now().isoformat():
             raise ValueError("Assignment deadline must be a future date!")
         if effort_hours <= 0:
             raise ValueError("Effort hours must be greater than zero!")
@@ -46,7 +46,7 @@ class Assignment:
     def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, type: AssignmentType | None = None):
         if not title:
             raise ValueError("Assignment title cannot be blank!")
-        if not deadline or deadline < datetime.now():
+        if not deadline or deadline < datetime.now().isoformat():
             raise ValueError("Assignment deadline must be a future date!")
         if effort_hours <= 0:
             raise ValueError("Effort hours must be greater than zero!")
@@ -82,7 +82,7 @@ class Assignment:
         execute("DELETE FROM ASSIGNMENTS WHERE id = ?", (self.id,))
 
     def days_remaining(self):
-        delta = self.deadline - datetime.now()
+        delta = self.deadline - datetime.now().isoformat()
         return delta.days # negative if overdue
 
     def get_completion(self):

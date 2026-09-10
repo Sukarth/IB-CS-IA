@@ -18,7 +18,7 @@ class ProgressRecord:
         self.notes = notes
 
     def set_status(self, student: Student, assignment: Assignment, status: ProgressStatus, notes: str):
-        execute("INSERT OR REPLACE INTO PROGRESS_RECORDS (student_id, assignment_id, status, status_changed_at, notes) VALUES (?, ?, ?, ?, ?)", (student.id, assignment.id, status, datetime.now(), notes))
+        execute("INSERT OR REPLACE INTO PROGRESS_RECORDS (student_id, assignment_id, status, status_changed_at, notes) VALUES (?, ?, ?, ?, ?)", (student.id, assignment.id, status, datetime.now().isoformat(), notes))
         return self.__class__.get_progress(student, assignment)
 
     @classmethod

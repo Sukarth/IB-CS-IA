@@ -1,5 +1,8 @@
 from .assignment import Assignment 
+from .enums import AssignmentType
 from .work_chunk import WorkChunk
+from datetime import datetime
+from app.database import execute, query, query_one
 
 class ProblemSet(Assignment):
   def __init__(self, id: int, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: int, difficulty: int, is_published: bool, number_of_problems: int, type: AssignmentType | None = None):

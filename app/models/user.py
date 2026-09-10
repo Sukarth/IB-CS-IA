@@ -37,7 +37,7 @@ class User:
         password_hash = cls._hash_password(password)
         
         user_id = execute("INSERT INTO USERS (name, email, password_hash, role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (name, email, password_hash, activation.role.value, True, datetime.now()))
+                (name, email, password_hash, activation.role.value, True, datetime.now().isoformat()))
         return cls.get_by_id(user_id)
 
     @classmethod
