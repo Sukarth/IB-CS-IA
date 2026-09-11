@@ -37,8 +37,10 @@ class User:
         password_hash = cls._hash_password(password)
         
         user_id = execute("INSERT INTO USERS (name, email, password_hash, role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (name, email, password_hash, activation.role.value, True, datetime.now().isoformat()))
-        return cls.get_by_id(user_id)
+                (name, email, password_hash, activation.role_to_assign.value, True, datetime.now().isoformat()))
+        user = cls.get_by_id(user_id)
+        activation.mark_used(user)
+        return user
 
     @classmethod
     def _from_row(cls, row):
@@ -112,6 +114,9 @@ class User:
         self.password_hash = new_password_hash
 
         return self
+
+    def get_classrooms(self):
+        raise NotImplementedError
 
     def deactivate(self):
         # need to check if user has rights to perform this action? 

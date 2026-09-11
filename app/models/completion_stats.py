@@ -25,10 +25,10 @@ class CompletionStats:
         completion_count = query_one("SELECT COUNT(DISTINCT student_id) as completed FROM SUBMISSIONS WHERE assignment_id = ?", (assignment.id,))
         completion_percentage = (completion_count['completed'] / total_students['total']) * 100 if total_students['total'] > 0 else 0
         
-        completed_students_rows = query("SELECT DISTINCT STUDENTS.* FROM STUDENTS INNER JOIN SUBMISSIONS ON STUDENTS.id = SUBMISSIONS.student_id WHERE SUBMISSIONS.assignment_id = ?", (assignment.id,))
+        completed_students_rows = query("SELECT DISTINCT USERS.* FROM USERS INNER JOIN SUBMISSIONS ON USERS.id = SUBMISSIONS.student_id WHERE SUBMISSIONS.assignment_id = ?", (assignment.id,))
         completed_students = [Student._from_row(row) for row in completed_students_rows]
         
-        pending_students_rows = query("SELECT * FROM STUDENTS WHERE STUDENTS.id NOT IN (SELECT DISTINCT student_id FROM SUBMISSIONS WHERE assignment_id = ?) AND STUDENTS.id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, assignment.classroom_id))
+        pending_students_rows = query("SELECT * FROM USERS WHERE USERS.id NOT IN (SELECT DISTINCT student_id FROM SUBMISSIONS WHERE assignment_id = ?) AND USERS.id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, assignment.classroom_id))
         pending_students = [Student._from_row(row) for row in pending_students_rows]
         
         first_submission_at = query_one("SELECT MIN(submitted_at) as first FROM SUBMISSIONS WHERE assignment_id = ?", (assignment.id,))

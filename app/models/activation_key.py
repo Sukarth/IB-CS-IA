@@ -7,6 +7,7 @@ import bcrypt
 
 if TYPE_CHECKING:
     from .user import User
+    from .admin import Admin
 
 class ActivationKey:
     def __init__(self, id: int, key_hash: str, role_to_assign: UserRole, created_by_id: int, created_at: datetime, expires_at: datetime, is_used: bool, year_group_id: int | None = None, used_by_id: int | None = None, used_at: datetime | None = None):
@@ -22,9 +23,7 @@ class ActivationKey:
         self.used_at = used_at
     
     @classmethod
-    def generate(cls, role_to_assign: UserRole, created_by: UserRole, valid_days: int, year_group_id: int | None = None):
-        if created_by != UserRole.ADMIN:
-            raise ValueError("Only admins can generate activation keys!")
+    def generate(cls, role_to_assign: UserRole, created_by: Admin, valid_days: int, year_group_id: int | None = None):
         if valid_days <= 0:
             raise ValueError("Key validity must be greater than 0 days!")
         if not year_group_id and role_to_assign == UserRole.STUDENT:
@@ -33,17 +32,15 @@ class ActivationKey:
         # allow floats for valid_days?
         key = bcrypt.gensalt().decode('utf-8')
         key_hash = bcrypt.hashpw(key.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        expires_at = datetime.now().isoformat() + str(timedelta(days=valid_days))
+        expires_at = (datetime.now() + timedelta(days=valid_days)).isoformat()
         
         execute("INSERT INTO ACTIVATION_KEYS (key_hash, role_to_assign, created_by_id, created_at, expires_at, is_used, used_by_id, used_at, year_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (key_hash, role_to_assign.value, created_by.value, datetime.now().isoformat(), expires_at, False, None, None, year_group_id))
+                (key_hash, role_to_assign.value, created_by.id, datetime.now().isoformat(), expires_at, False, None, None, year_group_id))
         
         return key
     
     @classmethod
-    def generate_batch(cls, role_to_assign: UserRole, created_by: UserRole, valid_days: int, count: int, year_group_id: int | None = None):
-        if created_by != UserRole.ADMIN:
-            raise ValueError("Only admins can generate activation keys!")
+    def generate_batch(cls, role_to_assign: UserRole, created_by: Admin, valid_days: int, count: int, year_group_id: int | None = None):
         if valid_days <= 0:
             raise ValueError("Key validity must be greater than 0 days!")
         if count <= 0:
@@ -65,23 +62,37 @@ class ActivationKey:
             return None
         
         if bcrypt.checkpw(activation_key.encode('utf-8'), row['key_hash'].encode('utf-8')):
-            return cls(row['id'], row['key_hash'], UserRole(row['role_to_assign']), row['created_by_id'], datetime.fromisoformat(row['created_at']), datetime.fromisoformat(row['expires_at']), bool(row['is_used']), row['year_group_id'], row['used_by_id'], datetime.fromisoformat(row['used_at']) if row['used_at'] else None)
+            return cls._from_row(row)
         
         return None
+
+    @classmethod
+    def get_by_id(cls, id: int):
+        row = query_one("SELECT * FROM ACTIVATION_KEYS WHERE id = ?", (id,))
+        if not row:
+            return None
+        
+        return cls._from_row(row)
+
+    @classmethod
+    def _from_row(cls, row):
+        return cls(row['id'], row['key_hash'], UserRole(row['role_to_assign']), row['created_by_id'], datetime.fromisoformat(row['created_at']), datetime.fromisoformat(row['expires_at']), bool(row['is_used']), row['year_group_id'], row['used_by_id'], datetime.fromisoformat(row['used_at']) if row['used_at'] else None)
 
     def mark_used(self, used_by_user: User):
         if self.is_used:
             raise ValueError("Activation key has already been used!")
-        if self.expires_at < datetime.now().isoformat():
+        if self.expires_at < datetime.now():
             raise ValueError("Activation key has expired!")
         
         execute("UPDATE ACTIVATION_KEYS SET is_used = 1, used_by_id = ?, used_at = ? WHERE id = ?", (used_by_user.id, datetime.now().isoformat(), self.id))
         self.is_used = True
         self.used_by_id = used_by_user.id
-        self.used_at = datetime.now().isoformat()
+        self.used_at = datetime.now()
 
         return self
 
     def delete(self):
+        if self.is_used:
+            raise ValueError("Cannot delete an activation key that has already been used!")
         execute("DELETE FROM ACTIVATION_KEYS WHERE id = ?", (self.id,))
         return True

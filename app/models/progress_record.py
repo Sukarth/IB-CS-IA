@@ -17,9 +17,12 @@ class ProgressRecord:
         self.status_changed_at = status_changed_at
         self.notes = notes
 
-    def set_status(self, student: Student, assignment: Assignment, status: ProgressStatus, notes: str):
-        execute("INSERT OR REPLACE INTO PROGRESS_RECORDS (student_id, assignment_id, status, status_changed_at, notes) VALUES (?, ?, ?, ?, ?)", (student.id, assignment.id, status, datetime.now().isoformat(), notes))
-        return self.__class__.get_progress(student, assignment)
+    def set_status(self, status: ProgressStatus):
+        execute("UPDATE PROGRESS_RECORDS SET status = ?, status_changed_at = ? WHERE id = ?",
+                (status.value, datetime.now().isoformat(), self.id))
+        self.status = status
+        self.status_changed_at = datetime.now()
+        return self
 
     @classmethod
     def get_progress(cls, student: Student, assignment: Assignment):

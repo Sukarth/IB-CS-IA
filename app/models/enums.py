@@ -6,6 +6,7 @@ class UserRole(str, Enum):
     ADMIN = 'ADMIN'
 
 class AssignmentType(str, Enum):
+    GENERAL = 'GENERAL'
     ESSAY = 'ESSAY'
     PROBLEMSET = 'PROBLEMSET'
     PROJECT = 'PROJECT'

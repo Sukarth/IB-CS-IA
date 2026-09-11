@@ -2,6 +2,7 @@ from app.database import execute, query, query_one
 from .enums import AssignmentType
 from .completion_stats import CompletionStats
 from datetime import datetime
+from .work_chunk import WorkChunk
 
 class Assignment:
     def __init__(self, id: int, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: int, difficulty: int, is_published: bool, type: AssignmentType | None = None):
@@ -23,7 +24,7 @@ class Assignment:
             raise ValueError("Classroom does not exist!")
         if not title:
             raise ValueError("Assignment title cannot be blank!")
-        if not deadline or deadline < datetime.now().isoformat():
+        if not deadline or deadline < datetime.now():
             raise ValueError("Assignment deadline must be a future date!")
         if effort_hours <= 0:
             raise ValueError("Effort hours must be greater than zero!")
@@ -46,7 +47,7 @@ class Assignment:
     def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, type: AssignmentType | None = None):
         if not title:
             raise ValueError("Assignment title cannot be blank!")
-        if not deadline or deadline < datetime.now().isoformat():
+        if not deadline or deadline < datetime.now():
             raise ValueError("Assignment deadline must be a future date!")
         if effort_hours <= 0:
             raise ValueError("Effort hours must be greater than zero!")
@@ -78,11 +79,13 @@ class Assignment:
         execute("UPDATE ASSIGNMENTS SET is_published = 0 WHERE id = ?", (self.id,))
 
     def delete(self):
-        # NOT SAFE TO DELETE!! CHECK IF DATA PRESENT!
+        if self.get_completion().completion_count > 0:
+            raise ValueError("Cannot delete an assignment that has submissions!")
+        # WHERE ARE THE HELP REQUESTS???????????????
         execute("DELETE FROM ASSIGNMENTS WHERE id = ?", (self.id,))
 
     def days_remaining(self):
-        delta = self.deadline - datetime.now().isoformat()
+        delta = self.deadline - datetime.now()
         return delta.days # negative if overdue
 
     def get_completion(self):
@@ -92,5 +95,5 @@ class Assignment:
             return None
 
     def get_split_effort_hours(self):
-        return None
+        return [WorkChunk('Total', self.effort_hours)]
     

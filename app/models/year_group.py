@@ -27,6 +27,7 @@ class YearGroup:
     
     def add_student(self, student: Student):
         execute("UPDATE USERS SET year_group_id = ? WHERE id = ?", (self.id, student.id))
+        student.year_group_id = self.id
         return self
 
     def remove_student(self, student: Student):
@@ -34,6 +35,7 @@ class YearGroup:
             raise ValueError("Student is not in this year group!")
 
         execute("UPDATE USERS SET year_group_id = NULL WHERE id = ?", (student.id,))
+        student.year_group_id = None
         return self
 
     def get_students(self):

@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS enrollments (
 CREATE TABLE IF NOT EXISTS assignments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
-    type TEXT NOT NULL CHECK (type IN ('ESSAY', 'PROBLEMSET', 'PROJECT')),
+    type TEXT NOT NULL CHECK (type IN ('GENERAL', 'ESSAY', 'PROBLEMSET', 'PROJECT')),
     title TEXT NOT NULL,
     description TEXT,
     deadline TEXT NOT NULL,
