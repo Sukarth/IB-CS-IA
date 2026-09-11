@@ -25,6 +25,16 @@ class ProgressRecord:
         return self
 
     @classmethod
+    def get_or_create(cls, student: Student, assignment: Assignment):
+        row = query_one("SELECT * FROM PROGRESS_RECORDS WHERE student_id = ? AND assignment_id = ?", (student.id, assignment.id))
+        if row:
+            return cls(row['id'], row['student_id'], row['assignment_id'], ProgressStatus(row['status']), datetime.fromisoformat(row['status_changed_at']), row['notes'])
+        
+        progress_record_id = execute("INSERT INTO PROGRESS_RECORDS (student_id, assignment_id, status, status_changed_at) VALUES (?, ?, ?, ?)", (student.id, assignment.id, ProgressStatus.NOT_STARTED.value, datetime.now().isoformat()))
+
+        return cls(progress_record_id, student.id, assignment.id, ProgressStatus.NOT_STARTED, datetime.now(), "")
+
+    @classmethod
     def get_progress(cls, student: Student, assignment: Assignment):
         row = query_one("SELECT * FROM PROGRESS_RECORDS WHERE student_id = ? AND assignment_id = ?", (student.id, assignment.id))
         if not row:

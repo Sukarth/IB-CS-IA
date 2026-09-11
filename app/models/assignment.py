@@ -5,7 +5,9 @@ from datetime import datetime
 from .work_chunk import WorkChunk
 
 class Assignment:
-    def __init__(self, id: int, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: int, difficulty: int, is_published: bool, type: AssignmentType | None = None):
+    TYPE = None
+    
+    def __init__(self, id: int, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: int, difficulty: int, is_published: bool):
         self.id = id
         self.classroom_id = classroom_id
         self.title = title
@@ -14,10 +16,9 @@ class Assignment:
         self.effort_hours = effort_hours
         self.difficulty = difficulty
         self.is_published = is_published
-        self.type = type
 
     @classmethod
-    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, type: AssignmentType | None = None):
+    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, **extra):
         if not classroom_id:
             raise ValueError("Classroom ID cannot be blank!")
         if not query_one("SELECT * FROM CLASSROOMS WHERE id = ?", (classroom_id,)):
@@ -31,9 +32,11 @@ class Assignment:
         if difficulty < 1 or difficulty > 5:
             raise ValueError("Difficulty must be between 1 and 5!")
 
-        # THINK ABOUT HOW TO HANDLE CREATED_AT!!! and type of assignment
-        
-        assignment_id = execute("INSERT INTO ASSIGNMENTS (classroom_id, title, description, deadline, effort_hours, difficulty, is_published, created_at, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (classroom_id, title, description, deadline.isoformat(), effort_hours, difficulty, is_published, datetime.now().isoformat(), type.value if type else None))
+        columns = ['classroom_id', 'title', 'description', 'deadline', 'effort_hours', 'difficulty', 'is_published', 'type', 'created_at'] + list(extra)
+        values = [classroom_id, title, description, deadline.isoformat(), effort_hours, difficulty, is_published, cls.TYPE.value if cls.TYPE else None, datetime.now().isoformat()] + list(extra.values())
+        placeholders = ', '.join('?' for _ in columns)
+
+        assignment_id = execute("INSERT INTO ASSIGNMENTS (" + ', '.join(columns) + ") VALUES (" + placeholders + ")", values)
         return cls.get_by_id(assignment_id)
 
     @classmethod
@@ -42,7 +45,7 @@ class Assignment:
         if not row:
             return None
         
-        return cls(row['id'], row['classroom_id'], row['title'], row['description'], datetime.fromisoformat(row['deadline']), row['effort_hours'], row['difficulty'], bool(row['is_published']), AssignmentType(row['type']) if row['type'] else None) # return created at as well?
+        return cls._from_row(row)
      
     def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, type: AssignmentType | None = None):
         if not title:
@@ -63,6 +66,18 @@ class Assignment:
         self.type = type
 
         execute("UPDATE ASSIGNMENTS SET title = ?, description = ?, deadline = ?, effort_hours = ?, difficulty = ?, is_published = ?, type = ? WHERE id = ?", (self.title, self.description, self.deadline.isoformat(), self.effort_hours, self.difficulty, self.is_published, self.type.value if self.type else None, self.id))
+
+    @classmethod
+    def _from_row(cls, row):                       # the PICKER
+            from .general_assignment import GeneralAssignment
+            from .essay import Essay
+            from .problem_set import ProblemSet
+            from .project import Project
+            assignment_typer = {AssignmentType.GENERAL: GeneralAssignment,
+                      AssignmentType.ESSAY: Essay,
+                      AssignmentType.PROBLEMSET: ProblemSet,
+                      AssignmentType.PROJECT: Project}
+            return assignment_typer[AssignmentType(row['type'])]._from_row(row)
 
     def publish(self):
         if self.is_published:
