@@ -1,9 +1,17 @@
 from datetime import datetime
 from .user import User
 from .enums import UserRole
+from .classroom import Classroom
+from app.database import execute, query, query_one
 
 class Admin(User):
-    pass
+    def get_classrooms(self):
+        rows = query("SELECT * FROM CLASSROOMS")
+        return [Classroom._from_row(row) for row in rows]
+
+    @classmethod
+    def _from_row(cls, row):
+        return cls(row['id'], row['name'], row['email'], row['password_hash'], UserRole(row['role']), bool(row['is_active']), datetime.fromisoformat(row['created_at']))
 
     
 

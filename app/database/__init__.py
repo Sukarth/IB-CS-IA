@@ -20,20 +20,23 @@ def get_connection():
 
 def execute(sql, params=()):
     connection = get_connection()
-    cursor = connection.execute(sql, params)
-    connection.commit()
-    last_row_id = cursor.lastrowid
-    connection.close()
-    return last_row_id
+    try:
+        cursor = connection.execute(sql, params)
+        connection.commit()
+        return cursor.lastrowid
+    finally:
+        connection.close()
 
 def query(sql, params=()):
     connection = get_connection()
-    rows = connection.execute(sql, params).fetchall()
-    connection.close()
-    return rows
+    try:
+        return connection.execute(sql, params).fetchall()
+    finally:
+        connection.close()
 
 def query_one(sql, params=()):
     connection = get_connection()
-    row = connection.execute(sql, params).fetchone()
-    connection.close()
-    return row
+    try:
+        return connection.execute(sql, params).fetchone()
+    finally:
+        connection.close()

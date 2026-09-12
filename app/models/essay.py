@@ -15,6 +15,8 @@ class Essay(Assignment):
     def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, word_limit: int):
         if not word_limit:
             raise ValueError("Word limit cannot be blank!")
+        if word_limit < 0:
+            raise ValueError("Word limit must not be negative!")
         
         return cls._insert(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, word_limit=word_limit)
 

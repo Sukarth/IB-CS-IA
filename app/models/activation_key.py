@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from app.database import execute, query, query_one
 from datetime import datetime, timedelta
 from .enums import UserRole
-import bcrypt
+import secrets, hashlib
 
 if TYPE_CHECKING:
     from .user import User
@@ -24,14 +24,18 @@ class ActivationKey:
     
     @classmethod
     def generate(cls, role_to_assign: UserRole, created_by: Admin, valid_days: int, year_group_id: int | None = None):
+        if created_by.role != UserRole.ADMIN:
+            raise ValueError("Only admins can create activation keys!")
         if valid_days <= 0:
             raise ValueError("Key validity must be greater than 0 days!")
         if not year_group_id and role_to_assign == UserRole.STUDENT:
             raise ValueError("Year group ID MUST be provided for creating a student activation key!")
+        if year_group_id and role_to_assign != UserRole.STUDENT:
+            raise ValueError("Year group ID can only be provided for student activation keys!")
         
         # allow floats for valid_days?
-        key = bcrypt.gensalt().decode('utf-8')
-        key_hash = bcrypt.hashpw(key.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        key = secrets.token_hex(4).upper()
+        key_hash = hashlib.sha256(key.encode()).hexdigest()
         expires_at = (datetime.now() + timedelta(days=valid_days)).isoformat()
         
         execute("INSERT INTO ACTIVATION_KEYS (key_hash, role_to_assign, created_by_id, created_at, expires_at, is_used, used_by_id, used_at, year_group_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -41,12 +45,16 @@ class ActivationKey:
     
     @classmethod
     def generate_batch(cls, role_to_assign: UserRole, created_by: Admin, valid_days: int, count: int, year_group_id: int | None = None):
+        if created_by.role != UserRole.ADMIN:
+            raise ValueError("Only admins can create activation keys!")
         if valid_days <= 0:
             raise ValueError("Key validity must be greater than 0 days!")
         if count <= 0:
             raise ValueError("Count must be greater than 0!")
         if not year_group_id and role_to_assign == UserRole.STUDENT:
             raise ValueError("Year group ID MUST be provided for creating student activation keys!")
+        if year_group_id and role_to_assign != UserRole.STUDENT:
+            raise ValueError("Year group ID can only be provided for student activation keys!")
         
         keys = []
         for _ in range(count):
@@ -57,14 +65,11 @@ class ActivationKey:
 
     @classmethod
     def validate(cls, activation_key: str):
-        row = query_one("SELECT * FROM ACTIVATION_KEYS WHERE is_used = 0 AND expires_at > ?", (datetime.now().isoformat(),))
-        if not row:
-            return None
+        key_hash = hashlib.sha256(activation_key.encode()).hexdigest()
+        row = query_one("SELECT * FROM ACTIVATION_KEYS WHERE key_hash = ? AND is_used = 0 AND expires_at > ?",
+                    (key_hash, datetime.now().isoformat()))
         
-        if bcrypt.checkpw(activation_key.encode('utf-8'), row['key_hash'].encode('utf-8')):
-            return cls._from_row(row)
-        
-        return None
+        return cls._from_row(row) if row else None
 
     @classmethod
     def get_by_id(cls, id: int):

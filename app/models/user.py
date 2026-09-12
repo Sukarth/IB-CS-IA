@@ -2,9 +2,10 @@ from app.database import execute, query, query_one
 from datetime import datetime
 from .enums import UserRole
 from .activation_key import ActivationKey
+from abc import ABC, abstractmethod
 import bcrypt
 
-class User:
+class User(ABC):
     def __init__(self, id: int, name: str, email: str, password_hash: str, role: UserRole, is_active: bool, created_at: datetime):
         self.id = id
         self.name = name
@@ -14,7 +15,7 @@ class User:
         self.is_active = is_active
         self.created_at = created_at
 
-    # add a validate email method?
+    # add a validate email and pass method?
 
     @classmethod
     def register(cls, name: str, email: str, password: str, activation_key: str):
@@ -27,24 +28,27 @@ class User:
         if not activation_key:
             raise ValueError('activation key cannot be blank')
         
-        row = query_one("SELECT * FROM USERS WHERE email = ?", (email,))
-        if row:
-            raise ValueError("Email already exists")
+        if query_one("SELECT * FROM USERS WHERE email = ?", (email,)):
+            raise ValueError("email is already in use")
         activation = ActivationKey.validate(activation_key)
         if not activation:
             raise ValueError("Invalid activation key")
 
         password_hash = cls._hash_password(password)
         
-        user_id = execute("INSERT INTO USERS (name, email, password_hash, role, is_active, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (name, email, password_hash, activation.role_to_assign.value, True, datetime.now().isoformat()))
+        user_id = execute("INSERT INTO USERS (name, email, password_hash, role, is_active, created_at, year_group_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (name, email, password_hash, activation.role_to_assign.value, True, datetime.now().isoformat(), activation.year_group_id))
         user = cls.get_by_id(user_id)
         activation.mark_used(user)
         return user
 
     @classmethod
     def _from_row(cls, row):
-        return cls(row['id'], row['name'], row['email'], row['password_hash'], UserRole(row['role']), bool(row['is_active']), datetime.fromisoformat(row['created_at']))
+        from .admin import Admin
+        from .student import Student
+        from .teacher import Teacher
+        user_typer = {UserRole.ADMIN: Admin, UserRole.STUDENT: Student, UserRole.TEACHER: Teacher}
+        return user_typer[UserRole(row['role'])]._from_row(row)
 
     @classmethod
     def get_by_id(cls, id: int):
@@ -91,6 +95,8 @@ class User:
             raise ValueError('email is required')
         if not name:
             raise ValueError('name is required')
+        if query_one("SELECT * FROM USERS WHERE email = ? AND id != ?", (email, self.id)):
+            raise ValueError('email is already in use')
 
         execute("UPDATE USERS SET name = ?, email = ? WHERE id = ?", (name, email, self.id))
 
@@ -115,12 +121,20 @@ class User:
 
         return self
 
+    @abstractmethod
     def get_classrooms(self):
-        raise NotImplementedError
+        ...
 
     def deactivate(self):
         # need to check if user has rights to perform this action? 
         execute("UPDATE USERS SET is_active = ? WHERE id = ?", (False, self.id))
         self.is_active = False
+        
+        return self
+
+    def activate(self):
+        # need to check if user has rights to perform this action? 
+        execute("UPDATE USERS SET is_active = ? WHERE id = ?", (True, self.id))
+        self.is_active = True
         
         return self

@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from app.database import execute, query, query_one
 from datetime import datetime
 from .student import Student
+from .enums import ProgressStatus
 
 if TYPE_CHECKING:
     from .assignment import Assignment
@@ -22,21 +23,17 @@ class CompletionStats:
     @classmethod
     def get_by_assignment(cls, assignment: Assignment):
         total_students = query_one("SELECT COUNT(*) as total FROM ENROLLMENTS WHERE classroom_id = ?", (assignment.classroom_id,))
-        completion_count = query_one("SELECT COUNT(DISTINCT student_id) as completed FROM SUBMISSIONS WHERE assignment_id = ?", (assignment.id,))
+        completion_count = query_one("SELECT COUNT(DISTINCT student_id) as completed FROM PROGRESS_RECORDS WHERE assignment_id = ? AND status = ?", (assignment.id, ProgressStatus.COMPLETED.value))
         completion_percentage = (completion_count['completed'] / total_students['total']) * 100 if total_students['total'] > 0 else 0
         
-        completed_students_rows = query("SELECT DISTINCT USERS.* FROM USERS INNER JOIN SUBMISSIONS ON USERS.id = SUBMISSIONS.student_id WHERE SUBMISSIONS.assignment_id = ?", (assignment.id,))
+        completed_students_rows = query("SELECT DISTINCT USERS.* FROM USERS INNER JOIN PROGRESS_RECORDS ON USERS.id = PROGRESS_RECORDS.student_id WHERE PROGRESS_RECORDS.assignment_id = ? AND PROGRESS_RECORDS.status = ?", (assignment.id, ProgressStatus.COMPLETED.value))
         completed_students = [Student._from_row(row) for row in completed_students_rows]
         
-        pending_students_rows = query("SELECT * FROM USERS WHERE USERS.id NOT IN (SELECT DISTINCT student_id FROM SUBMISSIONS WHERE assignment_id = ?) AND USERS.id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, assignment.classroom_id))
+        pending_students_rows = query("SELECT * FROM USERS WHERE USERS.id NOT IN (SELECT DISTINCT student_id FROM PROGRESS_RECORDS WHERE assignment_id = ? AND status = ?) AND USERS.id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, ProgressStatus.COMPLETED.value, assignment.classroom_id))
         pending_students = [Student._from_row(row) for row in pending_students_rows]
         
-        first_submission_at = query_one("SELECT MIN(submitted_at) as first FROM SUBMISSIONS WHERE assignment_id = ?", (assignment.id,))
-        last_submission_at = query_one("SELECT MAX(submitted_at) as last FROM SUBMISSIONS WHERE assignment_id = ?", (assignment.id,))
-        
-        if first_submission_at:
-            first_submission_at = datetime.fromisoformat(first_submission_at['first'])
-        if last_submission_at:
-            last_submission_at = datetime.fromisoformat(last_submission_at['last'])
+        row = query_one("SELECT MIN(submitted_at) AS first, MAX(submitted_at) AS last FROM SUBMISSIONS WHERE assignment_id = ?", (assignment.id,))
+        first_submission_at = datetime.fromisoformat(row['first']) if row['first'] else None
+        last_submission_at = datetime.fromisoformat(row['last']) if row['last'] else None
         
         return cls(assignment.id, total_students['total'], completion_count['completed'], completion_percentage, completed_students, pending_students, first_submission_at, last_submission_at)

@@ -3,8 +3,9 @@ from .enums import AssignmentType
 from .completion_stats import CompletionStats
 from datetime import datetime
 from .work_chunk import WorkChunk
+from abc import ABC, abstractmethod
 
-class Assignment:
+class Assignment(ABC):
     TYPE = None
     
     def __init__(self, id: int, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: int, difficulty: int, is_published: bool):
@@ -49,7 +50,7 @@ class Assignment:
         
         return cls._from_row(row)
      
-    def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool):
+    def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int):
         if not title:
             raise ValueError("Assignment title cannot be blank!")
         if not deadline or deadline < datetime.now():
@@ -64,9 +65,9 @@ class Assignment:
         self.deadline = deadline
         self.effort_hours = effort_hours
         self.difficulty = difficulty
-        self.is_published = is_published
 
-        execute("UPDATE ASSIGNMENTS SET title = ?, description = ?, deadline = ?, effort_hours = ?, difficulty = ?, is_published = ? WHERE id = ?", (self.title, self.description, self.deadline.isoformat(), self.effort_hours, self.difficulty, self.is_published, self.id))
+        execute("UPDATE ASSIGNMENTS SET title = ?, description = ?, deadline = ?, effort_hours = ?, difficulty = ? WHERE id = ?", (self.title, self.description, self.deadline.isoformat(), self.effort_hours, self.difficulty, self.id))
+        return self
 
     @classmethod
     def _from_row(cls, row):
@@ -82,24 +83,28 @@ class Assignment:
             raise ValueError("Assignment is already published!")
         
         self.is_published = True
-        execute("UPDATE ASSIGNMENTS SET is_published = 1 WHERE id = ?", (self.id,))
-    
+        execute("UPDATE ASSIGNMENTS SET is_published = ? WHERE id = ?", (True, self.id))
+        return self
+
     def unpublish(self):
         if not self.is_published:
             raise ValueError("Assignment is already unpublished!")
         
         self.is_published = False
-        execute("UPDATE ASSIGNMENTS SET is_published = 0 WHERE id = ?", (self.id,))
+        execute("UPDATE ASSIGNMENTS SET is_published = ? WHERE id = ?", (False, self.id))
+        return self
 
     def delete(self):
-        if self.get_completion().completion_count > 0:
+        if query_one("SELECT * FROM SUBMISSIONS WHERE assignment_id = ?", (self.id,)):
             raise ValueError("Cannot delete an assignment that has submissions!")
-        # WHERE ARE THE HELP REQUESTS???????????????
+        if query_one("SELECT * FROM HELP_REQUESTS WHERE assignment_id = ?", (self.id,)):
+            raise ValueError("Cannot delete an assignment that has help requests!")
+
         execute("DELETE FROM ASSIGNMENTS WHERE id = ?", (self.id,))
+        return True
 
     def days_remaining(self):
-        delta = self.deadline - datetime.now()
-        return delta.days # negative if overdue
+        return (self.deadline - datetime.now()).total_seconds()/86400
 
     def get_completion(self):
         return CompletionStats.get_by_assignment(self)
@@ -107,9 +112,11 @@ class Assignment:
     def get_type(self):
         return self.TYPE
 
+    @abstractmethod
     def get_type_specific_details(self):
-            return None
+        ...
 
+    @abstractmethod
     def get_split_effort_hours(self):
-        return [WorkChunk('Total', self.effort_hours)]
+        ...
     

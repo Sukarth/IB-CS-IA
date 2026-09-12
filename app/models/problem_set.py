@@ -15,6 +15,8 @@ class ProblemSet(Assignment):
     def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, number_of_problems: int):
         if not number_of_problems:
             raise ValueError("Number of problems cannot be blank!")
+        if number_of_problems < 0:
+            raise ValueError("Number of problems must not be negative!")
         
         return cls._insert(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, number_of_problems=number_of_problems)
         

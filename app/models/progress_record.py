@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from app.database import execute, query, query_one
 from datetime import datetime
-from .enums import ProgressStatus
+from .enums import ProgressStatus, UserRole
 
 if TYPE_CHECKING:
     from .student import Student
@@ -17,19 +17,25 @@ class ProgressRecord:
         self.status_changed_at = status_changed_at
         self.notes = notes
 
-    def set_status(self, status: ProgressStatus):
-        execute("UPDATE PROGRESS_RECORDS SET status = ?, status_changed_at = ? WHERE id = ?",
-                (status.value, datetime.now().isoformat(), self.id))
+    def set_status(self, status: ProgressStatus, notes: str | None = None):
+        status = ProgressStatus(status)
+        if notes is None:
+            notes = self.notes
+        execute("UPDATE PROGRESS_RECORDS SET status = ?, status_changed_at = ?, notes = ? WHERE id = ?",
+                (status.value, datetime.now().isoformat(), notes, self.id))
         self.status = status
         self.status_changed_at = datetime.now()
+        self.notes = notes
         return self
 
     @classmethod
     def get_or_create(cls, student: Student, assignment: Assignment):
+        if student.role != UserRole.STUDENT:
+            raise ValueError("Only students can have progress records!")
         
         record = cls.get_progress(student, assignment)
         
-        return record if record
+        if record: return record
         
         execute("INSERT INTO PROGRESS_RECORDS (student_id, assignment_id, status, status_changed_at) VALUES (?, ?, ?, ?)", (student.id, assignment.id, ProgressStatus.NOT_STARTED.value, datetime.now().isoformat()))
 
@@ -46,3 +52,5 @@ class ProgressRecord:
     @classmethod
     def _from_row(cls, row):
         return cls(row['id'], row['student_id'], row['assignment_id'], ProgressStatus(row['status']), datetime.fromisoformat(row['status_changed_at']), row['notes'])
+
+    
