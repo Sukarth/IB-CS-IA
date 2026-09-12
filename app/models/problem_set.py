@@ -12,11 +12,11 @@ class ProblemSet(Assignment):
         self.number_of_problems = number_of_problems
 
     @classmethod
-    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, number_of_problems: int = 1, **extra):
+    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, number_of_problems: int):
         if not number_of_problems:
             raise ValueError("Number of problems cannot be blank!")
         
-        return super().create(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, number_of_problems=number_of_problems)
+        return cls._insert(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, number_of_problems=number_of_problems)
         
     @classmethod
     def _from_row(cls, row):

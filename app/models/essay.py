@@ -12,11 +12,11 @@ class Essay(Assignment):
         self.word_limit = word_limit
 
     @classmethod
-    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, word_limit: int = 1000, **extra):
+    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, word_limit: int):
         if not word_limit:
             raise ValueError("Word limit cannot be blank!")
         
-        return super().create(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, word_limit=word_limit)
+        return cls._insert(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, word_limit=word_limit)
 
     @classmethod
     def _from_row(cls, row):

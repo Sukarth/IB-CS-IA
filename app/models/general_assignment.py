@@ -6,6 +6,10 @@ class GeneralAssignment(Assignment):
     TYPE = AssignmentType.GENERAL
 
     @classmethod
+    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool):
+        return cls._insert(classroom_id, title, description, deadline, effort_hours, difficulty, is_published)
+
+    @classmethod
     def _from_row(cls, row):
         return cls(id=row['id'], classroom_id=row['classroom_id'], title=row['title'], description=row['description'], deadline=datetime.fromisoformat(row['deadline']), effort_hours=row['effort_hours'], difficulty=row['difficulty'], is_published=bool(row['is_published']))
     

@@ -18,7 +18,9 @@ class Assignment:
         self.is_published = is_published
 
     @classmethod
-    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, **extra):
+    def _insert(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, **extra):
+        if cls.TYPE is None:
+            raise TypeError("Assignment is abstract. Use a subclass")
         if not classroom_id:
             raise ValueError("Classroom ID cannot be blank!")
         if not query_one("SELECT * FROM CLASSROOMS WHERE id = ?", (classroom_id,)):
@@ -33,7 +35,7 @@ class Assignment:
             raise ValueError("Difficulty must be between 1 and 5!")
 
         columns = ['classroom_id', 'title', 'description', 'deadline', 'effort_hours', 'difficulty', 'is_published', 'type', 'created_at'] + list(extra)
-        values = [classroom_id, title, description, deadline.isoformat(), effort_hours, difficulty, is_published, cls.TYPE.value if cls.TYPE else None, datetime.now().isoformat()] + list(extra.values())
+        values = [classroom_id, title, description, deadline.isoformat(), effort_hours, difficulty, is_published, cls.TYPE.value, datetime.now().isoformat()] + list(extra.values())
         placeholders = ', '.join('?' for _ in columns)
 
         assignment_id = execute("INSERT INTO ASSIGNMENTS (" + ', '.join(columns) + ") VALUES (" + placeholders + ")", values)

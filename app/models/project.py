@@ -13,7 +13,7 @@ class Project(Assignment):
         self.max_group_size = max_group_size
 
     @classmethod
-    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, min_group_size: int = 1, max_group_size: int = 1, **extra):
+    def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, min_group_size: int, max_group_size: int):
         if min_group_size < 0:
             raise ValueError("Minimum group size cannot be smaller than zero!")
         if max_group_size < 1:
@@ -21,7 +21,7 @@ class Project(Assignment):
         if max_group_size < min_group_size:
             raise ValueError("Maximum group size must be bigger than the minimum group size!")
             
-        return super().create(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, min_group_size=min_group_size, max_group_size=max_group_size)
+        return cls._insert(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, min_group_size=min_group_size, max_group_size=max_group_size)
 
     @classmethod
     def _from_row(cls, row):
