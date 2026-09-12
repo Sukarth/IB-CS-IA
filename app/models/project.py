@@ -28,4 +28,7 @@ class Project(Assignment):
         return cls(row['id'], row['classroom_id'], row['title'], row['description'], datetime.fromisoformat(row['deadline']), row['effort_hours'], row['difficulty'], bool(row['is_published']), row['min_group_size'], row['max_group_size'])
 
     def get_type_specific_details(self):
-        return {'work_chunk': self.work_chunk, 'min_group_size': self.min_group_size, 'max_group_size': self.max_group_size}
+        return {'split_effort_hours': self.get_split_effort_hours(), 'min_group_size': self.min_group_size, 'max_group_size': self.max_group_size}
+
+    def get_split_effort_hours(self):
+        return [WorkChunk('Planning', self.effort_hours * 0.2), WorkChunk('Work', self.effort_hours * 0.5), WorkChunk('Review', self.effort_hours * 0.1) , WorkChunk('Presentation', self.effort_hours * 0.2)]

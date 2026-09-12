@@ -23,4 +23,7 @@ class ProblemSet(Assignment):
         return cls(row['id'], row['classroom_id'], row['title'], row['description'], datetime.fromisoformat(row['deadline']), row['effort_hours'], row['difficulty'], bool(row['is_published']), row['number_of_problems'])
 
     def get_type_specific_details(self):
-        return {'work_chunk': self.WorkChunk, 'number_of_problems': self.number_of_problems}
+        return {'split_effort_hours': self.get_split_effort_hours(), 'number_of_problems': self.number_of_problems}
+
+    def get_split_effort_hours(self):
+        return [WorkChunk('Problem Solving', self.effort_hours * 0.7), WorkChunk('Review', self.effort_hours * 0.3)]

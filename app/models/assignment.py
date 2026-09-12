@@ -47,7 +47,7 @@ class Assignment:
         
         return cls._from_row(row)
      
-    def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, type: AssignmentType | None = None):
+    def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool):
         if not title:
             raise ValueError("Assignment title cannot be blank!")
         if not deadline or deadline < datetime.now():
@@ -63,21 +63,17 @@ class Assignment:
         self.effort_hours = effort_hours
         self.difficulty = difficulty
         self.is_published = is_published
-        self.type = type
 
-        execute("UPDATE ASSIGNMENTS SET title = ?, description = ?, deadline = ?, effort_hours = ?, difficulty = ?, is_published = ?, type = ? WHERE id = ?", (self.title, self.description, self.deadline.isoformat(), self.effort_hours, self.difficulty, self.is_published, self.type.value if self.type else None, self.id))
+        execute("UPDATE ASSIGNMENTS SET title = ?, description = ?, deadline = ?, effort_hours = ?, difficulty = ?, is_published = ? WHERE id = ?", (self.title, self.description, self.deadline.isoformat(), self.effort_hours, self.difficulty, self.is_published, self.id))
 
     @classmethod
-    def _from_row(cls, row):                       # the PICKER
-            from .general_assignment import GeneralAssignment
-            from .essay import Essay
-            from .problem_set import ProblemSet
-            from .project import Project
-            assignment_typer = {AssignmentType.GENERAL: GeneralAssignment,
-                      AssignmentType.ESSAY: Essay,
-                      AssignmentType.PROBLEMSET: ProblemSet,
-                      AssignmentType.PROJECT: Project}
-            return assignment_typer[AssignmentType(row['type'])]._from_row(row)
+    def _from_row(cls, row):
+        from .general_assignment import GeneralAssignment
+        from .essay import Essay
+        from .problem_set import ProblemSet
+        from .project import Project
+        assignment_typer = {AssignmentType.GENERAL: GeneralAssignment, AssignmentType.ESSAY: Essay, AssignmentType.PROBLEMSET: ProblemSet, AssignmentType.PROJECT: Project}
+        return assignment_typer[AssignmentType(row['type'])]._from_row(row)
 
     def publish(self):
         if self.is_published:
@@ -105,6 +101,9 @@ class Assignment:
 
     def get_completion(self):
         return CompletionStats.get_by_assignment(self)
+
+    def get_type(self):
+        return self.TYPE
 
     def get_type_specific_details(self):
             return None
