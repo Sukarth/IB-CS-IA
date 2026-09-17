@@ -1,0 +1,81 @@
+from __future__ import annotations
+from typing import TYPE_CHECKING
+from .assignment import Assignment
+from .enums import AssignmentType
+from .work_chunk import WorkChunk
+from datetime import datetime
+from app.database import execute, query, query_one
+
+if TYPE_CHECKING:
+    from .user import User
+class Material:
+    def __init__(self, id: int, title: str, description: str, classroom_id: int, uploaded_by_id: int):
+        self.id = id
+        self.title = title
+        self.description = description
+        self.classroom_id = classroom_id
+        self.uploaded_by_id = uploaded_by_id
+
+    @classmethod
+    def create(cls, title: str, description: str, classroom_id: int, uploaded_by_id: int):
+        if not title:
+            raise ValueError("Material title cannot be blank!")
+        if not classroom_id:
+            raise ValueError("Classroom ID cannot be blank!")
+        if not uploaded_by_id:
+            raise ValueError("Uploaded by ID cannot be blank!")
+
+        return cls.get_by_id(execute("INSERT INTO MATERIALS (title, description, classroom_id, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?)",
+            (title, description, classroom_id, uploaded_by_id, datetime.now().isoformat())))
+    
+    @classmethod
+    def _from_row(cls, row):
+        return cls(row['id'], row['title'], row['description'], row['classroom_id'], uploaded_by_id=row['uploaded_by'])
+
+    @classmethod
+    def get_by_id(cls, material_id: int):
+        row = query_one("SELECT * FROM MATERIALS WHERE id = ?", (material_id,))
+        if not row:
+            return None
+        return cls._from_row(row)
+    
+    def update(self, title: str, description: str):
+        if not title:
+            raise ValueError("Material title cannot be blank!")
+        
+        execute("UPDATE MATERIALS SET title = ?, description = ? WHERE id = ?", (title, description, self.id))
+        self.title = title
+        self.description = description
+        return self
+
+    def delete(self):
+        if query_one("SELECT * FROM ATTACHMENTS WHERE material_id = ?", (self.id,)):
+            raise ValueError("Cannot delete a material with attachments. Please remove attachments first.")
+        execute("DELETE FROM MATERIALS WHERE id = ?", (self.id,))
+        return True
+    
+    def attach_file(self, uploaded_by_id: int, stored_filename: str, original_filename: str, mime_type: str, file_size_kb: int):
+        from .file_attachment import FileAttachment
+
+        if not stored_filename:
+            raise ValueError("Stored filename cannot be blank!")
+        if not original_filename:
+            raise ValueError("Original filename cannot be blank!")
+        if not mime_type:
+            raise ValueError("MIME type cannot be blank!")
+        if file_size_kb <= 0:
+            raise ValueError("File size must be greater than zero!")
+        if not uploaded_by_id:
+            raise ValueError("Uploaded by ID cannot be blank!")
+        
+        return FileAttachment.create(self.id, uploaded_by_id, stored_filename, original_filename, mime_type, file_size_kb)
+    
+    def attach_link(self, uploaded_by_id: int, link: str):
+        from .link_attachment import LinkAttachment
+
+        if not uploaded_by_id:
+            raise ValueError("Uploaded by ID cannot be blank!")
+        if not link:
+            raise ValueError("Link cannot be blank!")
+        
+        return LinkAttachment.create(self.id, uploaded_by_id, link)

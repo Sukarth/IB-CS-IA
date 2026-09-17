@@ -51,14 +51,12 @@ class Assignment(ABC):
         return cls._from_row(row)
      
     def _update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, **extra):
-        if self.TYPE is None:
-            raise TypeError("Assignment is abstract. Use a subclass!")
         if not title:
             raise ValueError("Assignment title cannot be blank!")
-        if not deadline or deadline < datetime.now():
-            raise ValueError("Assignment deadline must be a future date!")
         if effort_hours <= 0:
             raise ValueError("Effort hours must be greater than zero!")
+        if not deadline:
+            raise ValueError("Assignment deadline cannot be blank!")
         if difficulty < 1 or difficulty > 5:
             raise ValueError("Difficulty must be between 1 and 5!")
 

@@ -3,19 +3,43 @@ from datetime import datetime
 from .enums import UserRole
 from .activation_key import ActivationKey
 from abc import ABC, abstractmethod
+from email_validator import validate_email, EmailNotValidError
 import bcrypt
+import re
 
 class User(ABC):
     def __init__(self, id: int, name: str, email: str, password_hash: str, role: UserRole, is_active: bool, created_at: datetime):
         self.id = id
         self.name = name
-        self.email = email
+        self.email = email.strip().lower()
         self.password_hash = password_hash
         self.role = role
         self.is_active = is_active
         self.created_at = created_at
 
-    # add a validate email and pass method?
+    @staticmethod
+    def _validate_email(email: str):
+        try:
+            validate_email(email, check_deliverability=False)
+            return True
+        except EmailNotValidError:
+            return False
+
+
+    @staticmethod
+    def _validate_password(password: str):
+        if len(password) < 8:
+            return (False, "Password must be at least 8 characters long")
+        elif re.search('[0-9]', password) is None:
+            return (False, "Password must contain at least one number")
+        elif re.search('[A-Z]', password) is None:
+            return (False, "Password must contain at least one uppercase letter")
+        elif re.search('[a-z]', password) is None:
+            return (False, "Password must contain at least one lowercase letter")
+        elif re.search('[!@#$%^&*(),.?":{}|<>]', password) is None:
+            return (False, "Password must contain at least one special character")
+        return (True, "Password is valid")
+
 
     @classmethod
     def register(cls, name: str, email: str, password: str, activation_key: str):
@@ -23,6 +47,9 @@ class User(ABC):
             raise ValueError('name cannot be blank')
         if not email:
             raise ValueError('email cannot be blank')
+        email = email.strip().lower()
+        if not cls._validate_email(email):
+            raise ValueError('invalid email address')
         if not password:
             raise ValueError('password cannot be blank')
         if not activation_key:
@@ -33,6 +60,10 @@ class User(ABC):
         activation = ActivationKey.validate(activation_key)
         if not activation:
             raise ValueError("Invalid activation key")
+        
+        is_valid, message = cls._validate_password(password)
+        if not is_valid:
+            raise ValueError(message)
 
         password_hash = cls._hash_password(password)
         
@@ -60,7 +91,7 @@ class User(ABC):
 
     @classmethod
     def get_by_email(cls, email: str):
-        row = query_one("SELECT * FROM USERS WHERE email = ?", (email,))
+        row = query_one("SELECT * FROM USERS WHERE email = ?", (email.strip().lower(),))
         if not row:
             return None
         
@@ -80,6 +111,9 @@ class User(ABC):
             raise ValueError('email cannot be blank')
         if not password:
             raise ValueError('password cannot be blank')
+        email = email.strip().lower()
+        if not cls._validate_email(email):
+            raise ValueError('invalid email address')
         user = cls.get_by_email(email)
         
         if not user or not cls._check_password(password, user.password_hash):
@@ -93,8 +127,11 @@ class User(ABC):
     def update_profile(self, name: str, email: str):
         if not email:
             raise ValueError('email is required')
+        email = email.strip().lower()
         if not name:
             raise ValueError('name is required')
+        if not self._validate_email(email):
+            raise ValueError('invalid email address')
         if query_one("SELECT * FROM USERS WHERE email = ? AND id != ?", (email, self.id)):
             raise ValueError('email is already in use')
 
@@ -110,9 +147,12 @@ class User(ABC):
             raise ValueError('current password is required')
         if not new_password:
             raise ValueError('new password is required')
-        # password complexity or length checks?
         if not self._check_password(current_password, self.password_hash):
             raise ValueError('incorrect current password')
+
+        is_valid, message = self._validate_password(new_password)
+        if not is_valid:
+            raise ValueError(message)
         
         new_password_hash = self._hash_password(new_password)
         
@@ -126,6 +166,8 @@ class User(ABC):
         ...
 
     def deactivate(self):
+        if not self.is_active:
+            raise ValueError('account is already deactivated')
         # need to check if user has rights to perform this action? 
         execute("UPDATE USERS SET is_active = ? WHERE id = ?", (False, self.id))
         self.is_active = False
@@ -133,6 +175,8 @@ class User(ABC):
         return self
 
     def activate(self):
+        if self.is_active:
+            raise ValueError('account is already active')
         # need to check if user has rights to perform this action? 
         execute("UPDATE USERS SET is_active = ? WHERE id = ?", (True, self.id))
         self.is_active = True

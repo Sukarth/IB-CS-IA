@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS classrooms (
     description TEXT,
     teacher_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TEXT,
-    is_archived INTEGER NOT NULL DEFAULT 0
+    is_published INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS enrollments (

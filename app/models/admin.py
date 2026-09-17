@@ -1,11 +1,11 @@
 from datetime import datetime
 from .user import User
 from .enums import UserRole
-from .classroom import Classroom
 from app.database import execute, query, query_one
 
 class Admin(User):
     def get_classrooms(self):
+        from .classroom import Classroom
         rows = query("SELECT * FROM CLASSROOMS")
         return [Classroom._from_row(row) for row in rows]
 

@@ -54,7 +54,7 @@ class YearGroup:
         return students
     
     def delete(self):
-        if self.get_students():
+        if query_one("SELECT * FROM USERS WHERE year_group_id = ?", (self.id,)):
             raise ValueError("Cannot delete a year group that has students assigned to it!")
         execute("DELETE FROM YEAR_GROUPS WHERE id = ?", (self.id,))
         return True
