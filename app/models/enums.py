@@ -11,6 +11,10 @@ class AssignmentType(str, Enum):
     PROBLEMSET = 'PROBLEMSET'
     PROJECT = 'PROJECT'
 
+class AttachmentType(str, Enum):
+    FILE = 'FILE'
+    LINK = 'LINK'
+
 class ProgressStatus(str, Enum):
     NOT_STARTED = 'NOT_STARTED'
     IN_PROGRESS = 'IN_PROGRESS'

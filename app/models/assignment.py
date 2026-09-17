@@ -80,7 +80,9 @@ class Assignment(ABC):
         from .essay import Essay
         from .problem_set import ProblemSet
         from .project import Project
+        
         assignment_typer = {AssignmentType.GENERAL: GeneralAssignment, AssignmentType.ESSAY: Essay, AssignmentType.PROBLEMSET: ProblemSet, AssignmentType.PROJECT: Project}
+        
         return assignment_typer[AssignmentType(row['type'])]._from_row(row)
 
     def publish(self):

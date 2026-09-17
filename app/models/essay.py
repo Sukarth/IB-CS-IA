@@ -2,7 +2,6 @@ from .assignment import Assignment
 from .enums import AssignmentType
 from .work_chunk import WorkChunk
 from datetime import datetime
-from app.database import execute, query, query_one
 
 class Essay(Assignment):
     TYPE = AssignmentType.ESSAY

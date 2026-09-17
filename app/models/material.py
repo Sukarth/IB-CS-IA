@@ -53,29 +53,17 @@ class Material:
             raise ValueError("Cannot delete a material with attachments. Please remove attachments first.")
         execute("DELETE FROM MATERIALS WHERE id = ?", (self.id,))
         return True
+
+    def get_attachments(self):
+        from .attachment import Attachment
+        return [Attachment._from_row(row) for row in query("SELECT * FROM ATTACHMENTS WHERE material_id = ?", (self.id,))]
     
     def attach_file(self, uploaded_by_id: int, stored_filename: str, original_filename: str, mime_type: str, file_size_kb: int):
         from .file_attachment import FileAttachment
-
-        if not stored_filename:
-            raise ValueError("Stored filename cannot be blank!")
-        if not original_filename:
-            raise ValueError("Original filename cannot be blank!")
-        if not mime_type:
-            raise ValueError("MIME type cannot be blank!")
-        if file_size_kb <= 0:
-            raise ValueError("File size must be greater than zero!")
-        if not uploaded_by_id:
-            raise ValueError("Uploaded by ID cannot be blank!")
         
         return FileAttachment.create(self.id, uploaded_by_id, stored_filename, original_filename, mime_type, file_size_kb)
     
-    def attach_link(self, uploaded_by_id: int, link: str):
+    def attach_link(self, uploaded_by_id: int, url: str, link_text: str):
         from .link_attachment import LinkAttachment
-
-        if not uploaded_by_id:
-            raise ValueError("Uploaded by ID cannot be blank!")
-        if not link:
-            raise ValueError("Link cannot be blank!")
         
-        return LinkAttachment.create(self.id, uploaded_by_id, link)
+        return LinkAttachment.create(self.id, uploaded_by_id, url, link_text)
