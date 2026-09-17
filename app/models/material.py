@@ -1,13 +1,9 @@
-from __future__ import annotations
-from typing import TYPE_CHECKING
 from .assignment import Assignment
 from .enums import AssignmentType
 from .work_chunk import WorkChunk
 from datetime import datetime
 from app.database import execute, query, query_one
 
-if TYPE_CHECKING:
-    from .user import User
 class Material:
     def __init__(self, id: int, title: str, description: str, classroom_id: int, uploaded_by_id: int):
         self.id = id
