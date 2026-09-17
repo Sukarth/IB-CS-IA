@@ -6,9 +6,11 @@ from .enums import AttachmentType
 class Attachment(ABC):
     TYPE = None
     
-    def __init__(self, id: int, uploaded_by_id: int):
+    def __init__(self, id: int, uploaded_by_id: int, material_id=None, submission_id=None):
         self.id = id
         self.uploaded_by_id = uploaded_by_id
+        self.material_id = material_id
+        self.submission_id = submission_id
 
     @classmethod
     def _insert(cls, uploaded_by_id: int, **extra):

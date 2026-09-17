@@ -1,5 +1,6 @@
 from .assignment import Assignment
 from .enums import AssignmentType
+from .enums import UploadArea
 from .work_chunk import WorkChunk
 from datetime import datetime
 from app.database import execute, query, query_one
@@ -57,9 +58,9 @@ class Material:
     def attach_file(self, uploaded_by_id: int, stored_filename: str, original_filename: str, mime_type: str, file_size_kb: int):
         from .file_attachment import FileAttachment
         
-        return FileAttachment.create(self.id, uploaded_by_id, stored_filename, original_filename, mime_type, file_size_kb)
+        return FileAttachment.create(self.id, UploadArea.MATERIALS, uploaded_by_id, stored_filename, original_filename, mime_type, file_size_kb)
     
     def attach_link(self, uploaded_by_id: int, url: str, link_text: str):
         from .link_attachment import LinkAttachment
         
-        return LinkAttachment.create(self.id, uploaded_by_id, url, link_text)
+        return LinkAttachment.create(self.id, UploadArea.MATERIALS, uploaded_by_id, url, link_text)

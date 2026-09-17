@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS attachments (
     mime_type TEXT,         -- FILE only
     file_size_kb INTEGER,   -- FILE only
     url TEXT,               -- LINK only
-    link_title TEXT,        -- LINK only
+    link_text TEXT,        -- LINK only
     uploaded_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     uploaded_at TEXT,
     -- XOR: attached to either a material OR a submission, never both or neither

@@ -20,3 +20,7 @@ class ProgressStatus(str, Enum):
     IN_PROGRESS = 'IN_PROGRESS'
     COMPLETED = 'COMPLETED'
     NEEDS_HELP = 'NEEDS_HELP'
+
+class UploadArea(str, Enum):
+    MATERIALS = 'MATERIALS'
+    SUBMISSIONS = 'SUBMISSIONS'
