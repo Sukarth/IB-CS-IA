@@ -13,13 +13,23 @@ class ProblemSet(Assignment):
 
     @classmethod
     def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, number_of_problems: int):
-        if not number_of_problems:
+        if not number_of_problems and number_of_problems != 0:
             raise ValueError("Number of problems cannot be blank!")
         if number_of_problems < 0:
             raise ValueError("Number of problems must not be negative!")
         
         return cls._insert(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, number_of_problems=number_of_problems)
+
+    def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, number_of_problems: int):
+        if not number_of_problems and number_of_problems != 0:
+            raise ValueError("Number of problems cannot be blank!")
+        if number_of_problems < 0:
+            raise ValueError("Number of problems must not be negative!")
         
+        self._update(title, description, deadline, effort_hours, difficulty, number_of_problems=number_of_problems)
+        self.number_of_problems = number_of_problems
+        return self
+
     @classmethod
     def _from_row(cls, row):
         return cls(row['id'], row['classroom_id'], row['title'], row['description'], datetime.fromisoformat(row['deadline']), row['effort_hours'], row['difficulty'], bool(row['is_published']), row['number_of_problems'])

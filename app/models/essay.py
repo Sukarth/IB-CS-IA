@@ -13,7 +13,7 @@ class Essay(Assignment):
 
     @classmethod
     def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, word_limit: int):
-        if not word_limit:
+        if not word_limit and word_limit != 0:
             raise ValueError("Word limit cannot be blank!")
         if word_limit < 0:
             raise ValueError("Word limit must not be negative!")
@@ -23,6 +23,17 @@ class Essay(Assignment):
     @classmethod
     def _from_row(cls, row):
         return cls(row['id'], row['classroom_id'], row['title'], row['description'], datetime.fromisoformat(row['deadline']), row['effort_hours'], row['difficulty'], bool(row['is_published']), row['word_limit'])
+    
+    def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, word_limit: int):
+        if not word_limit and word_limit != 0:
+            raise ValueError("Word limit cannot be blank!")
+        if word_limit < 0:
+            raise ValueError("Word limit must not be negative!")
+        
+        self._update(title, description, deadline, effort_hours, difficulty, word_limit=word_limit)
+        self.word_limit = word_limit
+        return self
+
 
     def get_type_specific_details(self):
         return {'split_effort_hours': self.get_split_effort_hours(), 'word_limit': self.word_limit}

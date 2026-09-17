@@ -21,7 +21,7 @@ class Assignment(ABC):
     @classmethod
     def _insert(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, **extra):
         if cls.TYPE is None:
-            raise TypeError("Assignment is abstract. Use a subclass")
+            raise TypeError("Assignment is abstract. Use a subclass!")
         if not classroom_id:
             raise ValueError("Classroom ID cannot be blank!")
         if not query_one("SELECT * FROM CLASSROOMS WHERE id = ?", (classroom_id,)):
@@ -50,7 +50,9 @@ class Assignment(ABC):
         
         return cls._from_row(row)
      
-    def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int):
+    def _update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, **extra):
+        if self.TYPE is None:
+            raise TypeError("Assignment is abstract. Use a subclass!")
         if not title:
             raise ValueError("Assignment title cannot be blank!")
         if not deadline or deadline < datetime.now():
@@ -59,14 +61,19 @@ class Assignment(ABC):
             raise ValueError("Effort hours must be greater than zero!")
         if difficulty < 1 or difficulty > 5:
             raise ValueError("Difficulty must be between 1 and 5!")
-        
+
+        columns = ['title', 'description', 'deadline', 'effort_hours', 'difficulty'] + list(extra)
+        values = [title, description, deadline.isoformat(), effort_hours, difficulty] + list(extra.values())
+        inp = ', '.join(f'{col} = ?' for col in columns)
+
+        execute("UPDATE ASSIGNMENTS SET " + inp + " WHERE id = ?", values + [self.id])
+
         self.title = title
         self.description = description
         self.deadline = deadline
         self.effort_hours = effort_hours
         self.difficulty = difficulty
 
-        execute("UPDATE ASSIGNMENTS SET title = ?, description = ?, deadline = ?, effort_hours = ?, difficulty = ? WHERE id = ?", (self.title, self.description, self.deadline.isoformat(), self.effort_hours, self.difficulty, self.id))
         return self
 
     @classmethod
