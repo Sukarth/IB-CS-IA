@@ -44,22 +44,22 @@ class User(ABC):
     @classmethod
     def register(cls, name: str, email: str, password: str, activation_key: str):
         if not name:
-            raise ValueError('name cannot be blank')
+            raise ValueError('Name cannot be blank!')
         if not email:
-            raise ValueError('email cannot be blank')
+            raise ValueError('Email cannot be blank!')
         email = email.strip().lower()
         if not cls._validate_email(email):
-            raise ValueError('invalid email address')
+            raise ValueError('Invalid email address!')
         if not password:
-            raise ValueError('password cannot be blank')
+            raise ValueError('Password cannot be blank!')
         if not activation_key:
-            raise ValueError('activation key cannot be blank')
+            raise ValueError('Activation key cannot be blank!')
         
         if query_one("SELECT * FROM USERS WHERE email = ?", (email,)):
-            raise ValueError("email is already in use")
+            raise ValueError("Email is already in use!")
         activation = ActivationKey.validate(activation_key)
         if not activation:
-            raise ValueError("Invalid activation key")
+            raise ValueError("Invalid activation key!")
         
         is_valid, message = cls._validate_password(password)
         if not is_valid:
@@ -108,32 +108,32 @@ class User(ABC):
     @classmethod
     def authenticate(cls, email: str, password: str):
         if not email:
-            raise ValueError('email cannot be blank')
+            raise ValueError('Email cannot be blank!')
         if not password:
-            raise ValueError('password cannot be blank')
+            raise ValueError('Password cannot be blank!')
         email = email.strip().lower()
         if not cls._validate_email(email):
-            raise ValueError('invalid email address')
+            raise ValueError('Invalid email address!')
         user = cls.get_by_email(email)
         
         if not user or not cls._check_password(password, user.password_hash):
-            raise ValueError('invalid email or password')
+            raise ValueError('Invalid email or password!')
 
         if not user.is_active:
-            raise ValueError('account not active')
+            raise ValueError('Account not active (is disabled)!')
         
         return user
 
     def update_profile(self, name: str, email: str):
         if not email:
-            raise ValueError('email is required')
+            raise ValueError('Email is required!')
         email = email.strip().lower()
         if not name:
-            raise ValueError('name is required')
+            raise ValueError('Name is required!')
         if not self._validate_email(email):
-            raise ValueError('invalid email address')
+            raise ValueError('Invalid email address!')
         if query_one("SELECT * FROM USERS WHERE email = ? AND id != ?", (email, self.id)):
-            raise ValueError('email is already in use')
+            raise ValueError('Email is already in use!')
 
         execute("UPDATE USERS SET name = ?, email = ? WHERE id = ?", (name, email, self.id))
 
@@ -144,11 +144,11 @@ class User(ABC):
 
     def change_password(self, current_password: str, new_password: str):
         if not current_password:
-            raise ValueError('current password is required')
+            raise ValueError('Current password is required!')
         if not new_password:
-            raise ValueError('new password is required')
+            raise ValueError('New password is required!')
         if not self._check_password(current_password, self.password_hash):
-            raise ValueError('incorrect current password')
+            raise ValueError('Incorrect current password!')
 
         is_valid, message = self._validate_password(new_password)
         if not is_valid:
@@ -167,8 +167,7 @@ class User(ABC):
 
     def deactivate(self):
         if not self.is_active:
-            raise ValueError('account is already deactivated')
-        # need to check if user has rights to perform this action? 
+            raise ValueError('Account is already deactivated!')
         execute("UPDATE USERS SET is_active = ? WHERE id = ?", (False, self.id))
         self.is_active = False
         
@@ -176,8 +175,7 @@ class User(ABC):
 
     def activate(self):
         if self.is_active:
-            raise ValueError('account is already active')
-        # need to check if user has rights to perform this action? 
+            raise ValueError('Account is already active!')
         execute("UPDATE USERS SET is_active = ? WHERE id = ?", (True, self.id))
         self.is_active = True
         

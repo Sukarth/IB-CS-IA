@@ -29,6 +29,10 @@ class YearGroup:
         self.name = new_name
         return self
     
+    @classmethod
+    def _from_row(cls, row):
+        return cls(row['id'], row['name'])
+    
     def add_student(self, student: Student):
         if student.role != UserRole.STUDENT:
             raise ValueError("Only students can be added to a year group!")
@@ -65,4 +69,4 @@ class YearGroup:
         if not row:
             return None
         
-        return cls(row['id'], row['name'])
+        return cls._from_row(row)

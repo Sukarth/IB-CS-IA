@@ -21,13 +21,15 @@ class Material:
             raise ValueError("Classroom ID cannot be blank!")
         if not uploaded_by_id:
             raise ValueError("Uploaded by ID cannot be blank!")
+        if not query_one("SELECT * FROM CLASSROOMS WHERE id = ?", (classroom_id,)):
+            raise ValueError("Classroom does not exist!")
 
-        return cls.get_by_id(execute("INSERT INTO MATERIALS (title, description, classroom_id, uploaded_by, uploaded_at) VALUES (?, ?, ?, ?, ?)",
+        return cls.get_by_id(execute("INSERT INTO MATERIALS (title, description, classroom_id, uploaded_by_id, uploaded_at) VALUES (?, ?, ?, ?, ?)",
             (title, description, classroom_id, uploaded_by_id, datetime.now().isoformat())))
     
     @classmethod
     def _from_row(cls, row):
-        return cls(row['id'], row['title'], row['description'], row['classroom_id'], uploaded_by_id=row['uploaded_by'])
+        return cls(row['id'], row['title'], row['description'], row['classroom_id'], uploaded_by_id=row['uploaded_by_id'])
 
     @classmethod
     def get_by_id(cls, material_id: int):

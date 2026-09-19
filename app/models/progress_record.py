@@ -50,6 +50,14 @@ class ProgressRecord:
         return cls._from_row(row)
 
     @classmethod
+    def get_by_id(cls, progress_record_id: int):
+        row = query_one("SELECT * FROM PROGRESS_RECORDS WHERE id = ?", (progress_record_id,))
+        if not row:
+            return None
+        
+        return cls._from_row(row)
+
+    @classmethod
     def _from_row(cls, row):
         return cls(row['id'], row['student_id'], row['assignment_id'], ProgressStatus(row['status']), datetime.fromisoformat(row['status_changed_at']), row['notes'])
 

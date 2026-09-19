@@ -13,7 +13,7 @@ class ProblemSet(Assignment):
 
     @classmethod
     def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, number_of_problems: int):
-        if not number_of_problems and number_of_problems != 0:
+        if not number_of_problems and number_of_problems != 0: # 0 means no fixed number of problems
             raise ValueError("Number of problems cannot be blank!")
         if number_of_problems < 0:
             raise ValueError("Number of problems must not be negative!")
@@ -21,7 +21,7 @@ class ProblemSet(Assignment):
         return cls._insert(classroom_id, title, description, deadline, effort_hours, difficulty, is_published, number_of_problems=number_of_problems)
 
     def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, number_of_problems: int):
-        if not number_of_problems and number_of_problems != 0:
+        if not number_of_problems and number_of_problems != 0: # 0 means no fixed number of problems
             raise ValueError("Number of problems cannot be blank!")
         if number_of_problems < 0:
             raise ValueError("Number of problems must not be negative!")

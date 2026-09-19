@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS materials (
     classroom_id INTEGER NOT NULL REFERENCES classrooms(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     description TEXT,
-    uploaded_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    uploaded_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     uploaded_at TEXT
 );
 
@@ -83,10 +83,11 @@ CREATE TABLE IF NOT EXISTS submissions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     assignment_id INTEGER NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+    is_submitted INTEGER NOT NULL DEFAULT 0,
     submitted_at TEXT,
     version INTEGER NOT NULL DEFAULT 1,
     feedback TEXT,
-    CONSTRAINT unique_student_assignment_version UNIQUE (student_id, assignment_id, version)
+    CONSTRAINT unique_submission_student_assignment UNIQUE (student_id, assignment_id)
 );
 
 CREATE TABLE IF NOT EXISTS attachments (
@@ -100,7 +101,7 @@ CREATE TABLE IF NOT EXISTS attachments (
     file_size_kb INTEGER,   -- FILE only
     url TEXT,               -- LINK only
     link_text TEXT,        -- LINK only
-    uploaded_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    uploaded_by_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     uploaded_at TEXT,
     -- XOR: attached to either a material OR a submission, never both or neither
     CONSTRAINT attachment_target_xor CHECK (

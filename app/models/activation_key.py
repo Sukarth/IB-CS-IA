@@ -24,8 +24,6 @@ class ActivationKey:
     
     @classmethod
     def generate(cls, role_to_assign: UserRole, created_by: Admin, valid_days: int, year_group_id: int | None = None):
-        if created_by.role != UserRole.ADMIN:
-            raise ValueError("Only admins can create activation keys!")
         if valid_days <= 0:
             raise ValueError("Key validity must be greater than 0 days!")
         if not year_group_id and role_to_assign == UserRole.STUDENT:
@@ -45,8 +43,6 @@ class ActivationKey:
     
     @classmethod
     def generate_batch(cls, role_to_assign: UserRole, created_by: Admin, valid_days: int, count: int, year_group_id: int | None = None):
-        if created_by.role != UserRole.ADMIN:
-            raise ValueError("Only admins can create activation keys!")
         if valid_days <= 0:
             raise ValueError("Key validity must be greater than 0 days!")
         if count <= 0:

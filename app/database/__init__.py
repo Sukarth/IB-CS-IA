@@ -7,9 +7,11 @@ SCHEMA_PATH = Path(__file__).resolve().parent / 'schema.sql'
 
 def init_db():
     connection = get_connection()
-    with open(SCHEMA_PATH, 'r') as f:
-        connection.executescript(f.read())
-    connection.close()
+    try:
+        with open(SCHEMA_PATH, 'r') as f:
+            connection.executescript(f.read())
+    finally:
+        connection.close()
 
 def get_connection():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)

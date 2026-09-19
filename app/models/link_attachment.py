@@ -27,7 +27,7 @@ class LinkAttachment(Attachment):
 
     @classmethod
     def _from_row(cls, row):
-        return cls(row['id'], row['uploaded_by'], row['url'], row['link_text'], row['material_id'], row['submission_id'])
+        return cls(row['id'], row['uploaded_by_id'], row['url'], row['link_text'], row['material_id'], row['submission_id'])
 
     def get_type_specific_details(self):
         return {"url": self.url, "link_text": self.link_text}

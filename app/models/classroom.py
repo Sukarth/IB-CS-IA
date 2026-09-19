@@ -69,24 +69,22 @@ class Classroom:
         return self
 
     def enroll_student(self, student: Student):
-        if not student:
-            raise ValueError("Student must be provided!")
         if not student.role == UserRole.STUDENT:
             raise ValueError("Only students can be enrolled in classrooms!")
         if query_one("SELECT * FROM ENROLLMENTS WHERE classroom_id = ? AND student_id = ?", (self.id, student.id)):
             raise ValueError("Student is already enrolled in this classroom!")
 
         execute("INSERT INTO ENROLLMENTS (classroom_id, student_id, joined_at) VALUES (?, ?, ?)", (self.id, student.id, datetime.now().isoformat()))
-        return True
+        return self
     
     def unenroll_student(self, student: Student):
-        if not student:
-            raise ValueError("Student must be provided!")
+        if not student.role == UserRole.STUDENT:
+            raise ValueError("Only students can be unenrolled from classrooms!")
         if not query_one("SELECT * FROM ENROLLMENTS WHERE classroom_id = ? AND student_id = ?", (self.id, student.id)):
             raise ValueError("Student is not enrolled in this classroom!")
 
         execute("DELETE FROM ENROLLMENTS WHERE classroom_id = ? AND student_id = ?", (self.id, student.id))
-        return True
+        return self
 
     def get_assignments(self):
         rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ?", (self.id,))

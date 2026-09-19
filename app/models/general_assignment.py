@@ -12,7 +12,7 @@ class GeneralAssignment(Assignment):
 
     @classmethod
     def _from_row(cls, row):
-        return cls(id=row['id'], classroom_id=row['classroom_id'], title=row['title'], description=row['description'], deadline=datetime.fromisoformat(row['deadline']), effort_hours=row['effort_hours'], difficulty=row['difficulty'], is_published=bool(row['is_published']))
+        return cls(row['id'], row['classroom_id'], row['title'], row['description'],datetime.fromisoformat(row['deadline']), row['effort_hours'], row['difficulty'], bool(row['is_published']))
     
     def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int):
         self._update(title, description, deadline, effort_hours, difficulty)

@@ -19,7 +19,7 @@ class Attachment(ABC):
         if not uploaded_by_id:
             raise ValueError("Uploaded by ID cannot be blank!")
 
-        columns = ['uploaded_by', 'kind', 'uploaded_at'] + list(extra)
+        columns = ['uploaded_by_id', 'kind', 'uploaded_at'] + list(extra)
         values = [uploaded_by_id, cls.TYPE.value, datetime.now().isoformat()] + list(extra.values())
         placeholders = ', '.join('?' for _ in columns)
 
@@ -37,11 +37,12 @@ class Attachment(ABC):
         from .file_attachment import FileAttachment
         from .link_attachment import LinkAttachment
         
-        attachment_typer = {AttachmentType.FILE.value: FileAttachment, AttachmentType.LINK.value: LinkAttachment}
+        attachment_typer = {AttachmentType.FILE: FileAttachment, AttachmentType.LINK: LinkAttachment}
         
-        return attachment_typer[row['kind']]._from_row(row)
+        return attachment_typer[AttachmentType(row['kind'])]._from_row(row)
 
     def delete(self):
+        # No checks needed, as attachments can be deleted independently
         execute("DELETE FROM ATTACHMENTS WHERE id = ?", (self.id,))
         return True
 
