@@ -46,7 +46,9 @@ class HelpRequest:
         if self.resolved_at is not None:
             raise ValueError("Help request is already resolved.")
         execute("UPDATE HELP_REQUESTS SET resolved_by_id = ?, resolution_notes = ?, resolved_at = ? WHERE id = ?", (resolved_by_id, resolution_notes, datetime.now().isoformat(), self.id))
-        
+        student = Student.get_by_id(self.student_id)
+        assignment = Assignment.get_by_id(self.assignment_id)
+        ProgressRecord.get_or_create(student, assignment).set_status(ProgressStatus.IN_PROGRESS)
         self.resolution_notes = resolution_notes
         self.resolved_at = datetime.now()
         self.resolved_by_id = resolved_by_id

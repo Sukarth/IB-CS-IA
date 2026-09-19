@@ -49,7 +49,7 @@ class Submission:
                 raise ValueError("Assignment is already submitted.")
             else:
                 execute("UPDATE SUBMISSIONS SET is_submitted = ?, submitted_at = ?, version = ? WHERE id = ?", (True, datetime.now().isoformat(), existing_submission.version + 1, existing_submission.id))
-                ProgressRecord.get_progress(student, assignment).set_status(ProgressStatus.COMPLETED)
+                ProgressRecord.get_or_create(student, assignment).set_status(ProgressStatus.COMPLETED)
                 return cls.get_by_id(existing_submission.id)
         else:
             execute("INSERT INTO SUBMISSIONS (assignment_id, student_id, is_submitted, submitted_at, version, feedback) VALUES (?, ?, ?, ?, ?, ?)", (assignment.id, student.id, True, datetime.now().isoformat(), 1, ""))
