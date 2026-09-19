@@ -8,17 +8,16 @@ class Queue:
 
     def enqueue(self, item: Any):
         """Add an element to the end of the queue."""
-        self._list.append(item)
+        self._list.append(Node(item))
+        return self
 
     def dequeue(self):
         """Remove first element of the queue and return resulting first element."""
-        if not self._list.head or self.is_empty():
-            raise IndexError("Cannot dequeue from an empty queue")
-        return self._list.delete(self._list.head.data).head.data
+        return self._list.pop()
 
     def peek(self):
         """Return the element at the front of the queue without removing it."""
-        if not self._list.head or self.is_empty():
+        if self._list.head is None:
             raise IndexError("Cannot peek at an empty queue")
         return self._list.head.data
 
