@@ -1,7 +1,7 @@
 from ..models.teacher import Teacher
 from ..models.help_request import HelpRequest
 from ..models.assignment import Assignment
-from .priority import calculate_priority
+from .request_priority import calculate_priority
 from ..adt.priority_queue import PriorityQueue
 
 def build_help_queue(teacher: Teacher):

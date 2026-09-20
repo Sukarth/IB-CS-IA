@@ -2,6 +2,7 @@ from app.database import execute, query, query_one
 from datetime import datetime
 from .enums import UserRole
 from .activation_key import ActivationKey
+from .student_settings import StudentSettings
 from abc import ABC, abstractmethod
 from email_validator import validate_email, EmailNotValidError
 import bcrypt
@@ -69,8 +70,13 @@ class User(ABC):
         
         user_id = execute("INSERT INTO USERS (name, email, password_hash, role, is_active, created_at, year_group_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (name, email, password_hash, activation.role_to_assign.value, True, datetime.now().isoformat(), activation.year_group_id))
+
+        if activation.role_to_assign == UserRole.STUDENT:
+            StudentSettings.create(student_id=None)
+            
         user = cls.get_by_id(user_id)
         activation.mark_used(user)
+        
         return user
 
     @classmethod

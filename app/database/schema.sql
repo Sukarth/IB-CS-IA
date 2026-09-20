@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS progress_records (
     status TEXT NOT NULL CHECK (status IN ('NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'NEEDS_HELP')),
     status_changed_at TEXT,
     notes TEXT,
+    hours_completed REAL NOT NULL DEFAULT 0
     CONSTRAINT unique_student_assignment UNIQUE (student_id, assignment_id)
 );
 
@@ -130,4 +131,18 @@ CREATE TABLE IF NOT EXISTS help_requests (
     resolved_at TEXT,
     resolved_by_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     resolution_notes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS student_settings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    procrastination_factor REAL NOT NULL DEFAULT 1.0,
+    hours_free_monday REAL NOT NULL DEFAULT 0,
+    hours_free_tuesday REAL NOT NULL DEFAULT 0,
+    hours_free_wednesday REAL NOT NULL DEFAULT 0,
+    hours_free_thursday REAL NOT NULL DEFAULT 0,
+    hours_free_friday REAL NOT NULL DEFAULT 0,
+    hours_free_saturday REAL NOT NULL DEFAULT 0,
+    hours_free_sunday REAL NOT NULL DEFAULT 0,
+    CONSTRAINT unique_student UNIQUE (student_id)
 );

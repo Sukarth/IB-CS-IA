@@ -9,13 +9,14 @@ if TYPE_CHECKING:
     from .assignment import Assignment
 
 class ProgressRecord:
-    def __init__(self, id: int, student_id: int, assignment_id: int, status: ProgressStatus, status_changed_at: datetime, notes: str):
+    def __init__(self, id: int, student_id: int, assignment_id: int, status: ProgressStatus, status_changed_at: datetime, notes: str, hours_completed: float = 0.0):
         self.id = id
         self.student_id = student_id
         self.assignment_id = assignment_id
         self.status = status
         self.status_changed_at = status_changed_at
         self.notes = notes
+        self.hours_completed = hours_completed
 
     def set_status(self, status: ProgressStatus, notes: str | None = None):
         status = ProgressStatus(status)
@@ -49,6 +50,12 @@ class ProgressRecord:
         
         return cls._from_row(row)
 
+    
+    def log_hours(self, hours: float):
+        execute("UPDATE PROGRESS_RECORDS SET hours_completed = hours_completed + ? WHERE id = ?", (hours, self.id))
+        self.hours_completed += hours
+        return self
+
     @classmethod
     def get_by_id(cls, progress_record_id: int):
         row = query_one("SELECT * FROM PROGRESS_RECORDS WHERE id = ?", (progress_record_id,))
@@ -59,6 +66,6 @@ class ProgressRecord:
 
     @classmethod
     def _from_row(cls, row):
-        return cls(row['id'], row['student_id'], row['assignment_id'], ProgressStatus(row['status']), datetime.fromisoformat(row['status_changed_at']), row['notes'])
+        return cls(row['id'], row['student_id'], row['assignment_id'], ProgressStatus(row['status']), datetime.fromisoformat(row['status_changed_at']), row['notes'], row['hours_completed'])
 
     

@@ -85,6 +85,14 @@ class Assignment(ABC):
         
         return assignment_typer[AssignmentType(row['type'])]._from_row(row)
 
+    @classmethod
+    def get_for_student(cls, student_id: int):
+        """Get all schedulable assignments for a specific student."""
+        rows = query("SELECT ASSIGNMENTS.* FROM ASSIGNMENTS INNER JOIN ENROLLMENTS ON ASSIGNMENTS.classroom_id = ENROLLMENTS.classroom_id WHERE ENROLLMENTS.student_id = ? AND ASSIGNMENTS.is_published = ? INNER JOIN SUBMISSIONS ON SUBMISSIONS.is_submitted = ?", (student_id, True, False))
+        if not rows:
+            return []
+        return [cls._from_row(row) for row in rows]
+
     def publish(self):
         if self.is_published:
             raise ValueError("Assignment is already published!")

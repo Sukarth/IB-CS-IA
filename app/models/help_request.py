@@ -40,8 +40,8 @@ class HelpRequest:
         ProgressRecord.get_or_create(student, assignment).set_status(ProgressStatus.NEEDS_HELP)
         return req
 
-    @staticmethod
-    def get_unresolved_for_teacher(teacher_id: int):
+    @classmethod
+    def get_unresolved_for_teacher(cls, teacher_id: int):
         rows = query("SELECT HELP_REQUESTS* FROM HELP_REQUESTS INNER JOIN ASSIGNMENTS ON HELP_REQUESTS.assignment_id = ASSIGNMENTS.id INNER JOIN CLASSROOMS ON ASSIGNMENTS.classroom_id = CLASSROOMS.id WHERE HELP_REQUESTS.resolved_at IS NULL AND CLASSROOMS.teacher_id = ?", (teacher_id,))
         return [HelpRequest._from_row(row) for row in rows]
 
@@ -51,7 +51,9 @@ class HelpRequest:
         execute("UPDATE HELP_REQUESTS SET resolved_by_id = ?, resolution_notes = ?, resolved_at = ? WHERE id = ?", (resolved_by_id, resolution_notes, datetime.now().isoformat(), self.id))
         student = Student.get_by_id(self.student_id)
         assignment = Assignment.get_by_id(self.assignment_id)
-        ProgressRecord.get_or_create(student, assignment).set_status(ProgressStatus.IN_PROGRESS)
+        prog = ProgressRecord.get_or_create(student, assignment)
+        if prog.status == ProgressStatus.NEEDS_HELP:
+            prog.set_status(ProgressStatus.IN_PROGRESS)
         self.resolution_notes = resolution_notes
         self.resolved_at = datetime.now()
         self.resolved_by_id = resolved_by_id

@@ -11,7 +11,7 @@ class PriorityQueue:
         return self._list.insert_in_order(PriorityNode(item, priority))
 
     def dequeue(self):
-        """Remove the highest priority element from the queue."""
+        """Remove and return the highest priority element from the queue."""
         return self._list.pop()
 
     def peek(self):
