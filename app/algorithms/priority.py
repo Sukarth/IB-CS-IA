@@ -2,6 +2,10 @@ from datetime import datetime
 from ..models.help_request import HelpRequest
 from ..models.assignment import Assignment
 
+def _urgency_curve(value, half_point, steepness):
+    """0 at value=0, exactly 0.5 at value=half_point, approaching 1 as value grows."""
+    return value ** steepness / (half_point ** steepness + value ** steepness)
+
 def calculate_priority(request: HelpRequest, assignment: Assignment):
     """Calculate the priority of a help request based on urgency, age, deadline, and assignment difficulty."""    
 
@@ -29,7 +33,3 @@ def calculate_priority(request: HelpRequest, assignment: Assignment):
     deadline_priority = 1.0 - _urgency_curve(hours_remaining, DEADLINE_HALF_POINT, DEADLINE_STEEPNESS)
 
     return W_URGENT * urgency + W_AGE * time_priority + W_DEADLINE * deadline_priority + W_DIFFICULTY * difficulty_priority
-
-def _urgency_curve(value, half_point, steepness):
-    """0 at value=0, exactly 0.5 at value=half_point, approaching 1 as value grows."""
-    return value ** steepness / (half_point ** steepness + value ** steepness)
