@@ -9,6 +9,7 @@ from .assignment_priority import calculate_assignment_priority
 from .scheduled_block import ScheduledBlock
 from ..models.progress_record import ProgressRecord
 from .study_plan import StudyPlan
+from ..models.enums import WarningType
 
 
 def _remaining_effort_hours(assignment: Assignment, student: Student, student_settings: StudentSettings):
@@ -59,7 +60,7 @@ def build_study_schedule(student: Student):
             
             while free_hours > 1e-9 and remaining[assignment.id] > 1e-9 and not phases[assignment.id].is_empty():
                 chunk = phases[assignment.id].peek()
-                used_hours = min(chunk.effort_hours, free_hours)
+                used_hours = min(chunk.effort_hours, free_hours, remaining[assignment.id])
                 blocks.append(ScheduledBlock(assignment.id, chunk.name, used_hours))
                 free_hours -= used_hours
                 chunk.effort_hours -= used_hours
@@ -70,6 +71,8 @@ def build_study_schedule(student: Student):
         plan[day_date] = blocks
 
     for assignment in assignments:
-        if remaining[assignment.id] > 1e-9:
-            warnings.append(f"Warning: Assignment '{assignment.title}' has insufficient time to complete before the deadline.")
+        if assignment.deadline.date() < date.today():
+            warnings.append((assignment.id, WarningType.OVERDUE, f"'{assignment.title}' is overdue. It has been scheduled as soon as possible."))
+        elif remaining[assignment.id] > 1e-9:
+            warnings.append((assignment.id, WarningType.CANNOT_FINISH, f"'{assignment.title}' cannot be finished before its deadline with your current free hours. {remaining[assignment.id]:.1f} hours could not be scheduled."))
     return StudyPlan(plan, warnings, date.today())

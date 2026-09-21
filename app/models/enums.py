@@ -24,3 +24,7 @@ class ProgressStatus(str, Enum):
 class UploadArea(str, Enum):
     MATERIALS = 'MATERIALS'
     SUBMISSIONS = 'SUBMISSIONS'
+
+class WarningType(str, Enum):
+    OVERDUE = 'OVERDUE'
+    CANNOT_FINISH = 'CANNOT_FINISH'
