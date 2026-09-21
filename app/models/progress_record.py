@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from app.database import execute, query, query_one
+from app.database import execute, query_one
 from datetime import datetime
 from .enums import ProgressStatus, UserRole
 

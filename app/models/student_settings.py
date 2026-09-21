@@ -51,3 +51,27 @@ class StudentSettings:
             return None
         
         return cls(row['student_id'], row['procrastination_factor'], bool(row['exclude_overdue']), row['hours_free_monday'], row['hours_free_tuesday'], row['hours_free_wednesday'], row['hours_free_thursday'], row['hours_free_friday'], row['hours_free_saturday'], row['hours_free_sunday'])
+
+    @classmethod
+    def get_hours_for_day(cls, student_id: int, day: int):
+        student_settings = cls.get_by_student_id(student_id)
+        if not student_settings:
+            return 0.0
+
+        match day:
+            case 0:
+                return student_settings.hours_free_monday
+            case 1:
+                return student_settings.hours_free_tuesday
+            case 2:
+                return student_settings.hours_free_wednesday
+            case 3:
+                return student_settings.hours_free_thursday
+            case 4:
+                return student_settings.hours_free_friday
+            case 5:
+                return student_settings.hours_free_saturday
+            case 6:
+                return student_settings.hours_free_sunday
+            case _:
+                raise ValueError("Day must be an integer between 0 (Monday) and 6 (Sunday).")
