@@ -15,9 +15,10 @@ def _remaining_effort_hours(assignment: Assignment, student: Student, student_se
     """Calculate the remaining effort hours for an assignment for a student."""
     return assignment.effort_hours * student_settings.procrastination_factor - (0 if ProgressRecord.get_progress(student, assignment) is None else ProgressRecord.get_progress(student, assignment).hours_completed )
 
-def _return_phases(assignment: Assignment):
+def _return_phases(assignment: Assignment, procrastination_factor: float):
     queue = Queue()
     for work_chunk in assignment.get_split_effort_hours():
+        work_chunk.effort_hours = work_chunk.effort_hours * procrastination_factor
         queue.enqueue(work_chunk)
     return queue
 
@@ -34,7 +35,7 @@ def build_study_schedule(student: Student):
     if student_settings.exclude_overdue:
         assignments = [a for a in assignments if a.deadline >= datetime.now()]
 
-    phases = {a.id: _return_phases(a) for a in assignments}
+    phases = {a.id: _return_phases(a, student_settings.procrastination_factor) for a in assignments}
     remaining = {a.id: _remaining_effort_hours(a, student, student_settings) for a in assignments}
     plan = {}
     warnings=[]
@@ -46,7 +47,9 @@ def build_study_schedule(student: Student):
 
         pq = PriorityQueue()
         for assignment in assignments:
-            if remaining[assignment.id] > 0:
+            before_deadline = day_date <= assignment.deadline.date()
+            is_overdue = assignment.deadline.date() < date.today()
+            if remaining[assignment.id] > 1e-9 and (before_deadline or is_overdue):
                 priority = calculate_assignment_priority(assignment, student, day_date, remaining[assignment.id])
                 pq.enqueue(assignment, priority)
 
@@ -54,7 +57,7 @@ def build_study_schedule(student: Student):
         while free_hours > 1e-9 and not pq.is_empty():
             assignment = pq.dequeue()
             
-            while free_hours > 0 and remaining[assignment.id] > 0 and not phases[assignment.id].is_empty():
+            while free_hours > 1e-9 and remaining[assignment.id] > 1e-9 and not phases[assignment.id].is_empty():
                 chunk = phases[assignment.id].peek()
                 used_hours = min(chunk.effort_hours, free_hours)
                 blocks.append(ScheduledBlock(assignment.id, chunk.name, used_hours))
@@ -67,6 +70,6 @@ def build_study_schedule(student: Student):
         plan[day_date] = blocks
 
     for assignment in assignments:
-        if remaining[assignment.id] > 0:
+        if remaining[assignment.id] > 1e-9:
             warnings.append(f"Warning: Assignment '{assignment.title}' has insufficient time to complete before the deadline.")
     return StudyPlan(plan, warnings, date.today())

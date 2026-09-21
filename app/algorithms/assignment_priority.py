@@ -14,4 +14,4 @@ def calculate_assignment_priority(assignment: Assignment, student: Student, day_
 
     hours_available = sum(student_hours[(day_date + timedelta(days=i)).weekday()] for i in range(days_remaining + 1))
 
-    return (assignment.effort_hours * student_settings.procrastination_factor - remaining_hours) - hours_available
+    return remaining_hours - hours_available
