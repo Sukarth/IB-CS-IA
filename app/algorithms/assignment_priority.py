@@ -4,7 +4,7 @@ from ..models.student import Student
 from ..models.student_settings import StudentSettings
 from ..models.progress_record import ProgressRecord
 
-def calculate_assignment_priority(assignment: Assignment, student: Student, day_date: date):
+def calculate_assignment_priority(assignment: Assignment, student: Student, day_date: date, remaining_hours: float):
     """Calculate the priority of an assignment for a student based on the time remaining until the deadline and the student's settings' available weekday hours."""
     student_settings = StudentSettings.get_by_student_id(student.id)
     
@@ -14,4 +14,4 @@ def calculate_assignment_priority(assignment: Assignment, student: Student, day_
 
     hours_available = sum(student_hours[(day_date + timedelta(days=i)).weekday()] for i in range(days_remaining + 1))
 
-    return (assignment.effort_hours * student_settings.procrastination_factor - ProgressRecord.get_or_create(student, assignment).hours_completed) - hours_available
+    return (assignment.effort_hours * student_settings.procrastination_factor - remaining_hours) - hours_available

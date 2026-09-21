@@ -41,30 +41,32 @@ def build_study_schedule(student: Student):
     
     for offset in range(15):
         day_date = date.today() + timedelta(days=offset)
-        free_hours = StudentSettings.get_hours_for_day(student.id, day_date.weekday())
+        free_hours = student_settings.get_hours_for_day(day_date.weekday())
         if free_hours == 0: continue
 
         pq = PriorityQueue()
         for assignment in assignments:
             if remaining[assignment.id] > 0:
-                priority = calculate_assignment_priority(assignment, student, day_date)
-                if priority > 0:
-                    warnings.append(f"Warning: Assignment '{assignment.name}' has insufficient time to complete before the deadline.")
+                priority = calculate_assignment_priority(assignment, student, day_date, remaining[assignment.id])
                 pq.enqueue(assignment, priority)
 
         blocks = []
-        while free_hours > 0 and not pq.is_empty():
+        while free_hours > 1e-9 and not pq.is_empty():
             assignment = pq.dequeue()
             
-            while free_hours > 0 and remaining[assignment.id] > 0:
+            while free_hours > 0 and remaining[assignment.id] > 0 and not phases[assignment.id].is_empty():
                 chunk = phases[assignment.id].peek()
                 used_hours = min(chunk.effort_hours, free_hours)
                 blocks.append(ScheduledBlock(assignment.id, chunk.name, used_hours))
                 free_hours -= used_hours
                 chunk.effort_hours -= used_hours
-                if chunk.effort_hours == 0:
+                remaining[assignment.id] -= used_hours
+                if chunk.effort_hours <= 1e-9:
                     phases[assignment.id].dequeue()
                 
         plan[day_date] = blocks
-    
+
+    for assignment in assignments:
+        if remaining[assignment.id] > 0:
+            warnings.append(f"Warning: Assignment '{assignment.title}' has insufficient time to complete before the deadline.")
     return StudyPlan(plan, warnings, date.today())
