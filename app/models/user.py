@@ -72,7 +72,7 @@ class User(ABC):
                 (name, email, password_hash, activation.role_to_assign.value, True, datetime.now().isoformat(), activation.year_group_id))
 
         if activation.role_to_assign == UserRole.STUDENT:
-            StudentSettings.create(student_id=None)
+            StudentSettings.create(user_id)
             
         user = cls.get_by_id(user_id)
         activation.mark_used(user)

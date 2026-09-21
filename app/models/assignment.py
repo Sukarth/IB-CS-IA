@@ -88,7 +88,7 @@ class Assignment(ABC):
     @classmethod
     def get_for_student(cls, student_id: int):
         """Get all schedulable assignments for a specific student."""
-        rows = query("SELECT ASSIGNMENTS.* FROM ASSIGNMENTS INNER JOIN ENROLLMENTS ON ASSIGNMENTS.classroom_id = ENROLLMENTS.classroom_id WHERE ENROLLMENTS.student_id = ? AND ASSIGNMENTS.is_published = ? INNER JOIN SUBMISSIONS ON SUBMISSIONS.is_submitted = ?", (student_id, True, False))
+        rows = query("SELECT ASSIGNMENTS.* FROM ASSIGNMENTS INNER JOIN ENROLLMENTS ON ASSIGNMENTS.classroom_id = ENROLLMENTS.classroom_id WHERE ENROLLMENTS.student_id = ? AND ASSIGNMENTS.is_published = ? AND ASSIGNMENTS.id NOT IN (SELECT assignment_id FROM SUBMISSIONS WHERE student_id = ? AND is_submitted = ?) ", (student_id, True, student_id, True))
         if not rows:
             return []
         return [cls._from_row(row) for row in rows]
