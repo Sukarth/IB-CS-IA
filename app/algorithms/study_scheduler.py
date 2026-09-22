@@ -1,4 +1,3 @@
-from IPython.utils.path import HomeDirError
 from ..models.assignment import Assignment
 from ..models.student import Student
 from ..models.enums import UserRole, WarningType
@@ -75,7 +74,7 @@ def build_study_schedule(student: Student, HORIZON_DAYS: int = 14):
         plan[day_date] = blocks
 
     for assignment in assignments:
-        if assignment.deadline.date() < date.today():
+        if assignment.deadline < datetime.now():
             warnings.append((assignment.id, WarningType.OVERDUE, f"'{assignment.title}' is overdue. It has been scheduled as soon as possible."))
         elif remaining[assignment.id] > 1e-9 and assignment.deadline.date() <= horizon_end:
             warnings.append((assignment.id, WarningType.CANNOT_FINISH, f"'{assignment.title}' cannot be finished before its deadline with your current free hours. {remaining[assignment.id]:.1f} hours could not be scheduled."))

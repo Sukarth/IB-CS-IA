@@ -3,6 +3,7 @@ from app.database import execute, query, query_one
 from .enums import UploadArea, UserRole, ProgressStatus
 from .assignment import Assignment
 from .student import Student
+from .classroom import Classroom
 
 class Submission:
     def __init__(self, id: int, assignment_id: int, student_id: int, is_submitted: bool, submitted_at: datetime | None, version: int, feedback: str):
@@ -41,6 +42,13 @@ class Submission:
         
         if not assignment:
             raise ValueError("Assignment does not exist.")
+
+        classroom = Classroom.get_by_id(assignment.classroom_id)
+        if not classroom:
+            raise ValueError("Classroom does not exist.")
+
+        if not classroom.is_published:
+            raise ValueError("Cannot submit assignment for an unpublished classroom.")
 
         existing_submission = cls.get_by_student_and_assignment(student, assignment)
 

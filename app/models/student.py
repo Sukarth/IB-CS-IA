@@ -10,7 +10,7 @@ class Student(User):
     
     def get_classrooms(self):
         from .classroom import Classroom
-        rows = query("SELECT CLASSROOMS.* FROM CLASSROOMS INNER JOIN ENROLLMENTS ON ENROLLMENTS.classroom_id = CLASSROOMS.id WHERE ENROLLMENTS.student_id = ?", (self.id,))
+        rows = query("SELECT CLASSROOMS.* FROM CLASSROOMS INNER JOIN ENROLLMENTS ON ENROLLMENTS.classroom_id = CLASSROOMS.id WHERE ENROLLMENTS.student_id = ? AND CLASSROOMS.is_published = ?", (self.id, True))
         return [Classroom._from_row(row) for row in rows]
     
     @classmethod

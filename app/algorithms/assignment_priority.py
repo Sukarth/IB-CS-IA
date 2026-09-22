@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 from ..models.assignment import Assignment
 from ..models.student_settings import StudentSettings
-from ..models.progress_record import ProgressRecord
 
 def calculate_assignment_priority(assignment: Assignment, student_settings: StudentSettings, day_date: date, remaining_hours: float):
     """Calculate the priority of an assignment for a student based on the time remaining until the deadline and the student's settings' available weekday hours."""

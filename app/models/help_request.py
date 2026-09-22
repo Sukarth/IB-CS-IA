@@ -4,6 +4,7 @@ from .enums import UserRole, ProgressStatus
 from .assignment import Assignment
 from .student import Student
 from .progress_record import ProgressRecord
+from .classroom import Classroom
 
 class HelpRequest:
     def __init__(self, id: int, student_id: int, assignment_id: int, message: str, created_at: datetime, is_urgent: bool, resolution_notes: str | None = None, resolved_at: datetime | None = None, resolved_by_id: int | None = None):
@@ -35,6 +36,13 @@ class HelpRequest:
         
         if not query_one("SELECT * FROM ASSIGNMENTS WHERE id = ?", (assignment.id,)):
             raise ValueError("Assignment does not exist.")
+
+        classroom = Classroom.get_by_id(assignment.classroom_id)
+        if not classroom:
+            raise ValueError("Classroom does not exist.")
+
+        if not classroom.is_published:
+            raise ValueError("Cannot submit assignment for an unpublished classroom.")
         
         req = cls.get_by_id(execute("INSERT INTO HELP_REQUESTS (student_id, assignment_id, message, created_at, is_urgent) VALUES (?, ?, ?, ?, ?)", (student.id, assignment.id, message, datetime.now().isoformat(), is_urgent)))
         ProgressRecord.get_or_create(student, assignment).set_status(ProgressStatus.NEEDS_HELP)
@@ -42,7 +50,7 @@ class HelpRequest:
 
     @classmethod
     def get_unresolved_for_teacher(cls, teacher_id: int):
-        rows = query("SELECT HELP_REQUESTS* FROM HELP_REQUESTS INNER JOIN ASSIGNMENTS ON HELP_REQUESTS.assignment_id = ASSIGNMENTS.id INNER JOIN CLASSROOMS ON ASSIGNMENTS.classroom_id = CLASSROOMS.id WHERE HELP_REQUESTS.resolved_at IS NULL AND CLASSROOMS.teacher_id = ?", (teacher_id,))
+        rows = query("SELECT HELP_REQUESTS.* FROM HELP_REQUESTS INNER JOIN ASSIGNMENTS ON HELP_REQUESTS.assignment_id = ASSIGNMENTS.id INNER JOIN CLASSROOMS ON ASSIGNMENTS.classroom_id = CLASSROOMS.id WHERE HELP_REQUESTS.resolved_at IS NULL AND CLASSROOMS.teacher_id = ?", (teacher_id,))
         return [HelpRequest._from_row(row) for row in rows]
 
     def resolve(self, resolved_by_id: int, resolution_notes: str):

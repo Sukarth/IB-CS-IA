@@ -86,8 +86,11 @@ class Classroom:
         execute("DELETE FROM ENROLLMENTS WHERE classroom_id = ? AND student_id = ?", (self.id, student.id))
         return self
 
-    def get_assignments(self):
-        rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ?", (self.id,))
+    def get_assignments(self, published_only: bool = False):
+        if published_only:
+            rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ? AND is_published = ?", (self.id, True))
+        else:
+            rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ?", (self.id,))
         return [Assignment._from_row(row) for row in rows]
     
     def get_materials(self):
