@@ -50,6 +50,9 @@ class Submission:
         if not classroom.is_published:
             raise ValueError("Cannot submit assignment for an unpublished classroom.")
 
+        if not assignment.is_published:
+            raise ValueError("Cannot submit assignment for an unpublished assignment.")
+
         existing_submission = cls.get_by_student_and_assignment(student, assignment)
 
         if existing_submission:
