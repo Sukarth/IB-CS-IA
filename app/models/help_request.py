@@ -48,7 +48,9 @@ class HelpRequest:
             raise ValueError("Cannot create a help request for an unpublished assignment.")
         
         req = cls.get_by_id(execute("INSERT INTO HELP_REQUESTS (student_id, assignment_id, message, created_at, is_urgent) VALUES (?, ?, ?, ?, ?)", (student.id, assignment.id, message, datetime.now().isoformat(), is_urgent)))
-        ProgressRecord.get_or_create(student, assignment).set_status(ProgressStatus.NEEDS_HELP)
+        prog = ProgressRecord.get_or_create(student, assignment)
+        if prog.status != ProgressStatus.COMPLETED:
+            prog.set_status(ProgressStatus.NEEDS_HELP)
         return req
 
     @classmethod

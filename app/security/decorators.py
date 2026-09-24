@@ -1,4 +1,4 @@
-from flask import g, redirect, url_for
+from flask import g, redirect, url_for, abort, flash
 from functools import wraps
 
 def login_required(func):
@@ -14,7 +14,8 @@ def role_required(role):
         @wraps(func)
         def wrapper(*args, **kwargs):
             if g.user is None or g.user.role != role:
-                return redirect(url_for('auth.login'))
+                flash('Access denied.')
+                abort(403)
             return func(*args, **kwargs)
         return wrapper
     return decorator

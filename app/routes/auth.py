@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, abort
 from app.models.user import User
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
@@ -13,9 +13,10 @@ def register():
 
         try:
             User.register(name, email, password, activation_key)
+            flash('User registered successfully.')
+            return redirect(url_for('auth.login'))
         except Exception as e:
             flash(str(e))
-        return redirect(url_for('auth.login'))
     return render_template('auth/register.html')
 
 @bp.route('/login', methods=('GET', 'POST'))
@@ -29,10 +30,10 @@ def login():
             if user:
                 session.clear()
                 session['user_id'] = user.id
+                flash('Logged in successfully.')
                 return redirect(url_for('index'))
         except Exception as e:
             flash(str(e))
-
     return render_template('auth/login.html')
 
 @bp.route('/logout')
@@ -48,3 +49,20 @@ def load_logged_in_user():
         g.user = None
     else:
         g.user = User.get_by_id(user_id)
+
+@bp.before_app_request
+def csrf_protection():
+    if request.method == 'POST':
+        token = session.get('_csrf_token')
+        form_token = request.form.get('_csrf_token')
+        if not token or token != form_token:
+            flash('Invalid CSRF token.')
+            abort(400)
+
+@bp.context_processor
+def generate_csrf_token():
+    if '_csrf_token' not in session:
+        import secrets
+        session['_csrf_token'] = secrets.token_urlsafe(32)
+    return session['_csrf_token']
+        

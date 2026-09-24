@@ -21,7 +21,7 @@ def create_app(test_config=None):
     from . import database
     database.init_db()
 
-    from .templates.auth import auth
+    from .routes import auth
     app.register_blueprint(auth.bp)
 
     return app
