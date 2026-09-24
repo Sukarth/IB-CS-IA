@@ -17,5 +17,12 @@ def create_app(test_config=None):
     # ensure the instance folder exists
     os.makedirs(app.instance_path, exist_ok=True)
 
+
+    from . import database
+    database.init_db()
+
+    from .templates.auth import auth
+    app.register_blueprint(auth.bp)
+
     return app
 
