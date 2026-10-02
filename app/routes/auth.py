@@ -1,12 +1,13 @@
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, abort
 from app.models.user import User
+import secrets
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 @bp.route('/register', methods=('GET', 'POST'))
 def register():
     if request.method == 'POST':
-        name = request.form['username']
+        name = request.form['name']
         email = request.form['email']
         password = request.form['password']
         activation_key = request.form['activation_key']
@@ -31,38 +32,41 @@ def login():
                 session.clear()
                 session['user_id'] = user.id
                 flash('Logged in successfully.')
-                return redirect(url_for('index'))
+                return redirect(url_for('main.index'))
         except Exception as e:
             flash(str(e))
     return render_template('auth/login.html')
 
-@bp.route('/logout')
+@bp.route('/logout', methods=('POST',))
 def logout():
     session.clear()
-    return redirect(url_for('index'))
+    flash('You have been logged out.')
+    return redirect(url_for('main.index'))
 
 @bp.before_app_request
 def load_logged_in_user():
+    g.user = None
     user_id = session.get('user_id')
-
     if user_id is None:
-        g.user = None
-    else:
-        g.user = User.get_by_id(user_id)
-
+        return
+    
+    user = User.get_by_id(user_id)
+    if user is None or not user.is_active:
+            session.clear()
+            flash('Your session has ended. Please log in again.')
+            return
+    g.user = user
 @bp.before_app_request
 def csrf_protection():
     if request.method == 'POST':
         token = session.get('_csrf_token')
         form_token = request.form.get('_csrf_token')
         if not token or token != form_token:
-            flash('Invalid CSRF token.')
             abort(400)
 
-@bp.context_processor
+@bp.app_context_processor
 def generate_csrf_token():
     if '_csrf_token' not in session:
-        import secrets
         session['_csrf_token'] = secrets.token_urlsafe(32)
-    return session['_csrf_token']
+    return {'csrf_token': session['_csrf_token']}
         

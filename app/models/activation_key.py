@@ -61,7 +61,7 @@ class ActivationKey:
 
     @classmethod
     def validate(cls, activation_key: str):
-        key_hash = hashlib.sha256(activation_key.encode()).hexdigest()
+        key_hash = hashlib.sha256(activation_key.strip().encode()).hexdigest()
         row = query_one("SELECT * FROM ACTIVATION_KEYS WHERE key_hash = ? AND is_used = 0 AND expires_at > ?",
                     (key_hash, datetime.now().isoformat()))
         

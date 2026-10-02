@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "macros.html" import post_button, icon with context %}
+
+{% block body %}
+<header class="topbar">
+    <button class="hamburger-menu">
+        {{ icon('hamburger_menu') }}
+    </button>
+    <h1>{% block heading %}{% endblock %}</h1>
+    <span class="icons">
+        <a href="#">{{ icon('bell') }}</a>
+        {{ post_button(url_for('auth.logout'), 'Log Out', icon('log_out')) }}
+    </span>
+</header>
+
+<div class="layout">
+    <aside class="sidebar">{% block sidebar %}{% endblock %}</aside>
+    <main>{% block content %}{% endblock %}</main>
+</div>
+{% endblock %}

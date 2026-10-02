@@ -1,0 +1,26 @@
+{% extends 'app.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+{% block heading %}Student Dashboard{% endblock %}
+
+{% block content %}
+    <p>This is the student dashboard. Welcome. You are a student.</p>
+
+    <p>Enrolled Classes:</p>
+    <ul>
+        {% for (class, teacher) in classrooms %}
+            <li>{{ class.name }} | Teacher: {{ teacher.name }}</li>
+        {% else %}
+            <li>No classes found.</li>
+        {% endfor %}
+    </ul>
+
+    <p>Here are your assignments:</p>
+    <ul>
+        {% for assignment in assignments %}
+            <li>{{ assignment.title }} | Due: {{ assignment.deadline.strftime('%d %b %Y') }}</li>
+        {% else %}
+            <li>No assignments found.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
