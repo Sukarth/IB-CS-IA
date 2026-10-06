@@ -15,11 +15,14 @@ class StudentSettings:
 
     @classmethod
     def create(cls, student_id: int, procrastination_factor: float = 1.0, exclude_overdue: bool = True, hours_free_monday: float = 0.0, hours_free_tuesday: float = 0.0, hours_free_wednesday: float = 0.0, hours_free_thursday: float = 0.0, hours_free_friday: float = 0.0, hours_free_saturday: float = 0.0, hours_free_sunday: float = 0.0):
+        cls._validate(procrastination_factor, exclude_overdue, hours_free_monday, hours_free_tuesday, hours_free_wednesday, hours_free_thursday, hours_free_friday, hours_free_saturday, hours_free_sunday)
         execute("INSERT INTO STUDENT_SETTINGS (student_id, procrastination_factor, exclude_overdue, hours_free_monday, hours_free_tuesday, hours_free_wednesday, hours_free_thursday, hours_free_friday, hours_free_saturday, hours_free_sunday) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (student_id, procrastination_factor, exclude_overdue, hours_free_monday, hours_free_tuesday, hours_free_wednesday, hours_free_thursday, hours_free_friday, hours_free_saturday, hours_free_sunday))
         
         return cls.get_by_student_id(student_id)
 
     def update_settings(self, procrastination_factor: float = 1.0, exclude_overdue: bool = True, hours_free_monday: float = 0.0, hours_free_tuesday: float = 0.0, hours_free_wednesday: float = 0.0, hours_free_thursday: float = 0.0, hours_free_friday: float = 0.0, hours_free_saturday: float = 0.0, hours_free_sunday: float = 0.0):
+        self._validate(procrastination_factor, exclude_overdue, hours_free_monday, hours_free_tuesday, hours_free_wednesday, hours_free_thursday, hours_free_friday, hours_free_saturday, hours_free_sunday)
+
         execute("UPDATE STUDENT_SETTINGS SET procrastination_factor = ?, exclude_overdue = ?, hours_free_monday = ?, hours_free_tuesday = ?, hours_free_wednesday = ?, hours_free_thursday = ?, hours_free_friday = ?, hours_free_saturday = ?, hours_free_sunday = ? WHERE student_id = ?", (procrastination_factor, exclude_overdue, hours_free_monday, hours_free_tuesday, hours_free_wednesday, hours_free_thursday, hours_free_friday, hours_free_saturday, hours_free_sunday, self.student_id))
         
         if procrastination_factor is not None:
@@ -70,3 +73,12 @@ class StudentSettings:
                 return self.hours_free_sunday
             case _:
                 raise ValueError("Day must be an integer between 0 (Monday) and 6 (Sunday).")
+    
+    @staticmethod
+    def _validate(procrastination_factor: float, exclude_overdue: bool, hours_free_monday: float, hours_free_tuesday: float, hours_free_wednesday: float, hours_free_thursday: float, hours_free_friday: float, hours_free_saturday: float, hours_free_sunday: float):
+        if procrastination_factor < 0:
+            raise ValueError("Procrastination factor must be non-negative.")
+        if not isinstance(exclude_overdue, bool):
+            raise ValueError("Exclude overdue must be True or False.")
+        if any(hour < 0 for hour in [hours_free_monday, hours_free_tuesday, hours_free_wednesday, hours_free_thursday, hours_free_friday, hours_free_saturday, hours_free_sunday]):
+            raise ValueError("Hours free must be non-negative.")

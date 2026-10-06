@@ -56,6 +56,7 @@ def load_logged_in_user():
             flash('Your session has ended. Please log in again.')
             return
     g.user = user
+
 @bp.before_app_request
 def csrf_protection():
     if request.method == 'POST':

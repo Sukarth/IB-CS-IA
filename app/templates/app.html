@@ -3,13 +3,16 @@
 
 {% block body %}
 <header class="topbar">
-    <button class="hamburger-menu">
+    <button class="hamburger_menu">
         {{ icon('hamburger_menu') }}
     </button>
     <h1>{% block heading %}{% endblock %}</h1>
-    <span class="icons">
+    <span class="topbar_icons">
+        <a href="{{ url_for('main.index') }}" aria-label="Home">
+            {{ icon('home') }}
+        </a>
         <a href="#">{{ icon('bell') }}</a>
-        {{ post_button(url_for('auth.logout'), 'Log Out', icon('log_out')) }}
+        {{ post_button(url_for('auth.logout'), 'Log Out', 'log_out', False) }}
     </span>
 </header>
 

@@ -1,0 +1,43 @@
+{% extends "app.html" %}
+{% from "macros.html" import icon with context %}
+{% block title %}Study Schedule{% endblock %}
+{% block heading %}Study Schedule{% endblock %}
+{% block content %}
+
+<a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+
+{% if not study_schedule %}
+    <p>No study schedule available.</p>
+{% else %}
+    <p>Here is your study schedule for {{ shown_date.strftime('%B %Y') }}:</p>
+{% endif %}
+
+<div class="calendar_header">
+    <a class="change_month" href="{{ url_for('student.schedule', year=prev_year, month=prev_month) }}" aria-label="Previous Month">
+        {{ icon('left_chevron') }}
+    </a>
+    <span class="month-year">{{ shown_date.strftime('%B %Y') }}</span>
+    <a class="change_month" href="{{ url_for('student.schedule', year=next_year, month=next_month) }}" aria-label="Next Month">
+        {{ icon('right_chevron') }}
+    </a>
+</div>
+
+<div class="calendar">
+    {% for label in day_abbr %}<div class="head">{{ label }}</div>{% endfor %}
+
+    {% for week in weeks %}
+        {% for day in week %}
+            <div class="day{% if day.month != month %} other-month{% endif %}{% if day == today %} today{% endif %}">
+                <span class="date">{{ day.day }}</span>
+                {% for block in study_schedule.days.get(day, []) %}
+                    <div class="block">
+                        {{ assignments[block.assignment_id].title }} | 
+                        {{ block.chunk_name }} ({{ '%.1f'|format(block.hours) }}h)
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% endfor %}
+</div>
+
+{% endblock %}

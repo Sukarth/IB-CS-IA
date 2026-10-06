@@ -26,10 +26,10 @@ def calculate_priority(request: HelpRequest, assignment: Assignment):
     urgency = 1.0 if urgent else 0.0
     difficulty_priority = difficulty/5.0
 
-    hours_waited = max((datetime.now() - requested_at).total_seconds(), 0.0)
-    time_priority = _urgency_curve(hours_waited, AGE_HALF_POINT, AGE_STEEPNESS)
+    seconds_waited = max((datetime.now() - requested_at).total_seconds(), 0.0)
+    time_priority = _urgency_curve(seconds_waited, AGE_HALF_POINT, AGE_STEEPNESS)
 
-    hours_remaining = max((deadline - datetime.now()).total_seconds(), 0.0)
-    deadline_priority = 1.0 - _urgency_curve(hours_remaining, DEADLINE_HALF_POINT, DEADLINE_STEEPNESS)
+    seconds_remaining = max((deadline - datetime.now()).total_seconds(), 0.0)
+    deadline_priority = 1.0 - _urgency_curve(seconds_remaining, DEADLINE_HALF_POINT, DEADLINE_STEEPNESS)
 
     return W_URGENT * urgency + W_AGE * time_priority + W_DEADLINE * deadline_priority + W_DIFFICULTY * difficulty_priority

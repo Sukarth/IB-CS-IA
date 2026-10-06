@@ -1,8 +1,8 @@
-{% macro post_button(action, label, icon) %}
+{% macro icon(name) %}{% include "icons/" + name + ".svg" %}{% endmacro %}
+
+{% macro post_button(action, label, icon_name, default_styles) %}
 <form method="post" action="{{ action }}" class="inline-form">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-    <button type="submit" title="{{ label }}" aria-label="{{ label }}">{{ icon }}</button>
+    <button type="submit" title="{{ label }}" aria-label="{{ label }}" {% if not default_styles %}class="custom_submit"{% endif %}>{{ icon(icon_name) }}</button>
 </form>
 {% endmacro %}
-
-{% macro icon(name) %}{% include "icons/" + name + ".svg" %}{% endmacro %}

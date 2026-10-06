@@ -1,0 +1,32 @@
+.calendar_header, .topbar, .topbar_icons {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.change_month {
+    text-decoration: none;
+}
+
+.calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+a:has(svg) {
+    color: inherit;
+    text-decoration: none;
+}
+
+a:has(svg):visited {
+    color: inherit;
+}
+
+.custom_submit {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+}
