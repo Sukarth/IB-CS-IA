@@ -1,5 +1,4 @@
 {% extends 'app.html' %}
-
 {% block title %}Student Dashboard{% endblock %}
 {% block heading %}Student Dashboard{% endblock %}
 
@@ -22,9 +21,11 @@
     <p>Here are your assignments:</p>
     <ul>
         {% for assignment in assignments %}
-            <a href="{{ url_for('student.assignment', classroom_id=assignment.classroom_id, assignment_id=assignment.id) }}">
-                <li>{{ assignment.title }} | Due: {{ assignment.deadline.strftime('%d %b %Y') }}</li>
-            </a>
+            <li>{{ assignment.title }} | Due: {{ assignment.deadline.strftime('%d %b %Y') }}
+                <a href="{{ url_for('student.assignment', classroom_id=assignment.classroom_id, assignment_id=assignment.id) }}">
+                    {{ icon('right_chevron') }}
+                </a>
+            </li>
         {% else %}
             <li>No assignments found.</li>
         {% endfor %}

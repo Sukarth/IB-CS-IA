@@ -3,7 +3,7 @@
 
 {% block body %}
 <header class="topbar">
-    <button class="hamburger_menu">
+    <button id="menu_button" aria-label="Menu" aria-expanded="false" aria-controls="nav">
         {{ icon('hamburger_menu') }}
     </button>
     <h1>{% block heading %}{% endblock %}</h1>
@@ -16,8 +16,13 @@
     </span>
 </header>
 
+{% include "_nav.html" %}
+<script src="{{ url_for('static', filename='nav.js') }}"></script>
+
+{% if self.back() %}<span class="back">{% block back %}{% endblock %}</span>{% endif %}
+
 <div class="layout">
-    <aside class="sidebar">{% block sidebar %}{% endblock %}</aside>
+    {% if self.sidebar() %}<aside class="sidebar">{% block sidebar %}{% endblock %}</aside>{% endif %}
     <main>{% block content %}{% endblock %}</main>
 </div>
 {% endblock %}

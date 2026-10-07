@@ -2,9 +2,13 @@
 {% from "macros.html" import icon with context %}
 {% block title %}Study Schedule{% endblock %}
 {% block heading %}Study Schedule{% endblock %}
-{% block content %}
+{% block back %}
+<a href="{{ url_for('student.dashboard') }}">
+    {{ icon('left_chevron') }} Go back to dashboard
+</a>
+{% endblock %}
 
-<a href="{{ url_for('student.dashboard') }}">Back to Dashboard</a>
+{% block content %}
 
 {% if not study_schedule %}
     <p>No study schedule available.</p>

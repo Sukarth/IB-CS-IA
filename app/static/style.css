@@ -30,3 +30,27 @@ a:has(svg):visited {
     border: none;
     padding: 0;
 }
+
+#menu_button {
+    z-index: 100;
+}
+
+#nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 10rem;
+    display: flex;
+    flex-direction: column;
+    visibility: hidden;
+    transform: translateX(-100%);
+    gap: 1rem;
+    background-color: white;
+    padding: 6rem 1rem;
+}
+
+#nav.show {
+    visibility: visible;
+    transform: translateX(0);
+}

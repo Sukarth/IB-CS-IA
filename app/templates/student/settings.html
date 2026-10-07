@@ -1,7 +1,14 @@
 {% extends "app.html" %}
 {% block title %}Study Planner Settings{% endblock %}
 {% block heading %}Study Planner Settings{% endblock %}
+{% block back %}
+    <a href="{{ url_for('student.schedule') }}">
+        {{ icon('left_chevron') }} Go back to study schedule
+    </a>
+{% endblock %}
+
 {% block content %}
+
 <p>Configure your study planner settings.</p>
 
 <form method="post" action="{{ url_for('student.settings') }}">

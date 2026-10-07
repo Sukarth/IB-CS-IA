@@ -1,0 +1,13 @@
+{% from "macros.html" import nav_link with context %}
+<nav id="nav" aria-label="Navigation">
+    <h1>Navigate to:</h1>
+    {% if g.user.role == 'STUDENT' %}
+        {{ nav_link('student.dashboard', 'Dashboard') }}
+        {{ nav_link('student.schedule', 'Study Schedule') }}
+        {{ nav_link('student.settings', 'Settings') }}
+    {% elif g.user.role == 'TEACHER' %}
+        {{ nav_link('teacher.dashboard', 'Dashboard') }}
+    {% elif g.user.role == 'ADMIN' %}
+        {{ nav_link('admin.dashboard', 'Dashboard') }}
+    {% endif %}
+</nav>

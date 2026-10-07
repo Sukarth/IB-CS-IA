@@ -1,8 +1,13 @@
 {% extends "app.html" %}
 {% block title %}Assignment{% endblock %}
 {% block heading %}Assignment{% endblock %}
-{% block content %}
+{% block back %}
+<a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}">
+    {{ icon('left_chevron') }} Go back to {{ classroom.name }}
+</a>
+{% endblock %}
 
+{% block content %}
 <!-- show the assignment details -->
 <div>
     <h2>{{ assignment.title }}</h2>
