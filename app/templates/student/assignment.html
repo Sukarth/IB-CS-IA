@@ -1,0 +1,105 @@
+{% extends "app.html" %}
+{% block title %}Assignment{% endblock %}
+{% block heading %}Assignment{% endblock %}
+{% block content %}
+
+<!-- show the assignment details -->
+<div>
+    <h2>{{ assignment.title }}</h2>
+    <p>{{ assignment.description }}</p>
+    <p>Estimated completion time: {{ (assignment.effort_hours // 24)|string + ' days, ' + (assignment.effort_hours % 24)|string + ' hours' if assignment.effort_hours >= 24 else assignment.effort_hours|string + ' hours' }}</p>
+    <p>Estimated Difficulty: {{ assignment.difficulty }}</p>
+    <p>Deadline: {{ assignment.deadline.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p>Status: {{ progress.status.value.replace('_', ' ').title() }}</p>
+    <p>Hours Logged: {{ progress.hours_completed}}</p>
+    <p>Notes: {{ progress.notes or '' }}</p>
+</div>
+
+<!-- Request Help -->
+<div>
+    <h3>Request Help</h3>
+    <form method="post" action="{{ url_for('student.request_help', classroom_id=classroom.id, assignment_id=assignment.id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="help_request">Enter your message:</label>
+        <textarea id="help_request" name="help_request" required></textarea>
+        <br><br>
+        <label for="is_urgent">Mark as urgent</label>
+        <input type="checkbox" id="is_urgent" name="is_urgent">
+        <button type="submit">Submit Help Request</button>
+    </form>
+</div>
+
+<!-- show submission info -->
+{% if not submission.is_submitted or progress.status in statuses %}
+    <h3>Attachments</h3>
+    {% if attachments %}
+        <h4>Previously Submitted Files</h4>
+        <!-- Show a list of previously submitted attachments and allow deleting them -->
+        <ul>
+            {% for attachment in attachments %}
+                <li>
+                    {% if attachment.TYPE == 'LINK' %}
+                        <a href="{{ attachment.url }}" target="_blank" rel="noopener noreferrer">{{ attachment.link_text }}</a> (Link)
+                    {% else %}
+                        <a href="{{ url_for('student.download_attachment', classroom_id=classroom.id, assignment_id=assignment.id, attachment_id=attachment.id) }}" target="_blank" rel="noopener noreferrer">{{ attachment.original_filename }}</a> ({{ attachment.file_size_kb }} KB)
+                    {% endif %}
+                    <form method="post" action="{{ url_for('student.delete_attachment', classroom_id=classroom.id, assignment_id=assignment.id, attachment_id=attachment.id) }}" style="display:inline;">
+                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                        <button type="submit">Delete</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <p>Attach {% if attachments %}additional links or files to{% else %}a link or a file to submit{% endif %} this assignment.</p>
+    <form method="post" action="{{ url_for('student.submit_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="link">Enter link(s) to submit:</label>
+            <textarea id="links" name="links" placeholder="Enter one link per line"></textarea>
+        <br><br>
+        <label for="file">Choose file(s) to submit:</label>
+        <input type="file" id="files" name="files" multiple>
+        <br><br>
+        <button type="submit">Submit Assignment</button>
+    </form>
+{% else %}
+    <p>You have submitted this assignment.</p>
+    <p>Submitted at: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p>Version: {{ submission.version }}</p>
+    {% if submission.feedback %}
+        <p>The teacher has provided feedback.</p>
+        <p>Feedback: {{ submission.feedback }}</p>
+    {% else %}
+        <p>You have not yet received feedback from the teacher. Try checking back later.</p>
+    {% endif %}
+    <form method="post" action="{{ url_for('student.unsubmit_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <button type="submit">Unsubmit Assignment</button>
+    </form>
+{% endif %}
+
+<!-- show the assignment actions -->
+
+<form method="post" action="{{ url_for('student.update_progress', classroom_id=classroom.id, assignment_id=assignment.id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    
+    <label for="status">Update Status:</label>
+    <select id="status" name="status">
+        {% for status in statuses %}
+            <option value="{{ status.value }}" {% if progress.status == status %} selected {% endif %}>{{ status.value.replace('_', ' ').title() }}</option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    <label for="hours_to_add">Add Hours:</label>
+    <input type="number" value="0" step="0.01" min="0" id="hours_to_add" name="hours_to_add" required>
+    <br><br>
+
+    <label for="notes">Edit Notes:</label>
+    <textarea id="notes" name="notes">{{ progress.notes or '' }}</textarea>
+    <br><br>
+
+    <button type="submit">Update Progress</button>
+</form>
+
+{% endblock %}

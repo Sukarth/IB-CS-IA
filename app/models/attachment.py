@@ -42,7 +42,6 @@ class Attachment(ABC):
         return attachment_typer[AttachmentType(row['kind'])]._from_row(row)
 
     def delete(self):
-        # No checks needed, as attachments can be deleted independently
         execute("DELETE FROM ATTACHMENTS WHERE id = ?", (self.id,))
         return True
 

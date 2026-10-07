@@ -16,8 +16,8 @@ def register():
             User.register(name, email, password, activation_key)
             flash('User registered successfully.')
             return redirect(url_for('auth.login'))
-        except Exception as e:
-            flash(str(e))
+        except ValueError as ve:
+            flash(str(ve))
     return render_template('auth/register.html')
 
 @bp.route('/login', methods=('GET', 'POST'))
@@ -33,8 +33,8 @@ def login():
                 session['user_id'] = user.id
                 flash('Logged in successfully.')
                 return redirect(url_for('main.index'))
-        except Exception as e:
-            flash(str(e))
+        except ValueError as ve:
+            flash(str(ve))
     return render_template('auth/login.html')
 
 @bp.route('/logout', methods=('POST',))

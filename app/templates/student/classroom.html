@@ -1,0 +1,38 @@
+{% extends "app.html" %}
+{% block title %}Classroom{% endblock %}
+{% block heading %}Classroom{% endblock %}
+{% block content %}
+
+<!-- show the classroom details -->
+<div>
+    <h2>{{ classroom.name }}</h2>
+    <p>{{ classroom.description }}</p>
+    <p>Teacher: {{ teacher.name }}</p>
+</div>
+
+<!-- show the assignments -->
+<h3>Assignments</h3>
+
+{% if submitted %}
+    <details>
+        <summary>View {{ submitted|length }} submitted assignments</summary>
+        <ul>
+            {% for assignment in submitted %}
+                <li>
+                    <a href="{{ url_for('student.assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}">{{ assignment.title }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </details>
+{% endif %}
+
+<ul>
+    {% for assignment in to_do %}
+        <li>
+            <a href="{{ url_for('student.assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}">{{ assignment.title }}</a> - Due: {{ assignment.deadline.strftime('%Y-%m-%d %H:%M') }}
+        </li>
+    {% else %}
+        <li>No assignments available.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

@@ -1,4 +1,5 @@
 from app.database import execute, query_one
+import math
 
 class StudentSettings:
     def __init__(self, student_id: int, procrastination_factor: float = 1.0, exclude_overdue: bool = True, hours_free_monday: float = 0.0, hours_free_tuesday: float = 0.0, hours_free_wednesday: float = 0.0, hours_free_thursday: float = 0.0, hours_free_friday: float = 0.0, hours_free_saturday: float = 0.0, hours_free_sunday: float = 0.0):
@@ -80,5 +81,8 @@ class StudentSettings:
             raise ValueError("Procrastination factor must be non-negative.")
         if not isinstance(exclude_overdue, bool):
             raise ValueError("Exclude overdue must be True or False.")
-        if any(hour < 0 for hour in [hours_free_monday, hours_free_tuesday, hours_free_wednesday, hours_free_thursday, hours_free_friday, hours_free_saturday, hours_free_sunday]):
-            raise ValueError("Hours free must be non-negative.")
+        if not math.isfinite(procrastination_factor):
+            raise ValueError("Procrastination factor must be a finite number.")
+        for hour in [hours_free_monday, hours_free_tuesday, hours_free_wednesday, hours_free_thursday, hours_free_friday, hours_free_saturday, hours_free_sunday]:
+            if not 0 <= hour <= 24:
+                raise ValueError("Free hours must be between 0 and 24.")

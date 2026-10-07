@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from app.database import execute, query_one
 from datetime import datetime
 from .enums import ProgressStatus, UserRole
+import math
 
 if TYPE_CHECKING:
     from .student import Student
@@ -52,6 +53,11 @@ class ProgressRecord:
 
     
     def log_hours(self, hours: float):
+        if hours < 0:
+            raise ValueError("Hours completed cannot be negative!")
+        if not math.isfinite(hours):
+            raise ValueError("Hours completed must be a finite number!")
+        
         execute("UPDATE PROGRESS_RECORDS SET hours_completed = hours_completed + ? WHERE id = ?", (hours, self.id))
         self.hours_completed += hours
         return self

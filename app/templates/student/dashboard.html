@@ -9,7 +9,11 @@
     <p>Enrolled Classes:</p>
     <ul>
         {% for (class, teacher) in classrooms %}
-            <li>{{ class.name }} | Teacher: {{ teacher.name }}</li>
+            <li>{{ class.name }} | Teacher: {{ teacher.name }}
+                <a href="{{ url_for('student.classroom', classroom_id=class.id) }}">
+                    {{ icon('right_chevron') }}
+                </a>
+            </li>
         {% else %}
             <li>No classes found.</li>
         {% endfor %}
@@ -18,7 +22,9 @@
     <p>Here are your assignments:</p>
     <ul>
         {% for assignment in assignments %}
-            <li>{{ assignment.title }} | Due: {{ assignment.deadline.strftime('%d %b %Y') }}</li>
+            <a href="{{ url_for('student.assignment', classroom_id=assignment.classroom_id, assignment_id=assignment.id) }}">
+                <li>{{ assignment.title }} | Due: {{ assignment.deadline.strftime('%d %b %Y') }}</li>
+            </a>
         {% else %}
             <li>No assignments found.</li>
         {% endfor %}

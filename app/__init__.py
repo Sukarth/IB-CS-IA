@@ -5,6 +5,13 @@ def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(SECRET_KEY=None)
 
+    app.config['MAX_CONTENT_LENGTH'] = 30 * 1024 * 1024  # 30 MB
+    app.config['UPLOAD_EXTENSIONS'] = ['.jpg', '.png', '.gif', '.pdf', '.docx', '.xlsx', '.pptx', '.txt', '.zip', '.rar', '.7z', '.mp4', '.mp3', '.wav', '.py', '.java', '.c', '.cpp', '.html', '.css', '.js']
+    app.config['MAX_FILES'] = 5
+    app.config['MAX_LINKS'] = 10
+    app.config['UPLOAD_PATH'] = os.path.join(app.instance_path, 'uploads')
+
+
     if test_config is None:
         # load the instance config, if it exists, when not testing
         app.config.from_pyfile('config.py', silent=False)
@@ -15,6 +22,8 @@ def create_app(test_config=None):
     # ensure the instance folder exists
     os.makedirs(app.instance_path, exist_ok=True)
 
+    # ensure the uploads folder exists
+    os.makedirs(app.config['UPLOAD_PATH'], exist_ok=True)
 
     from . import database
     database.init_db()

@@ -1,7 +1,7 @@
 from .attachment import Attachment
 from .enums import AttachmentType
 from .enums import UploadArea
-from app.database import query_one
+from app.database import query_one, execute
 
 class FileAttachment(Attachment):
     TYPE = AttachmentType.FILE
