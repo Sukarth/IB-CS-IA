@@ -31,6 +31,7 @@ class Classroom:
 
     @classmethod
     def create(cls, name: str, description: str, teacher: Teacher, is_published: bool):
+        name = name.strip()
         if teacher.role != UserRole.TEACHER:
             raise ValueError("Only teachers can create classrooms!")
         if not name:
@@ -43,6 +44,7 @@ class Classroom:
         return cls.get_by_id(classroom_id)
 
     def update(self, name: str, description: str):
+        name = name.strip()
         if not name:
             raise ValueError("Classroom name cannot be blank!")
 
@@ -53,6 +55,18 @@ class Classroom:
         self.name = name
         self.description = description
         return self
+
+    def delete(self):
+        if query_one("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ?", (self.id,)):
+            raise ValueError("Cannot delete a classroom with assignments. Please remove assignments first.")
+        if query_one("SELECT * FROM MATERIALS WHERE classroom_id = ?", (self.id,)):
+            raise ValueError("Cannot delete a classroom with materials. Please remove materials first.")
+        if query_one("SELECT * FROM ENROLLMENTS WHERE classroom_id = ?", (self.id,)):
+            raise ValueError("Cannot delete a classroom with enrolled students. Please unenroll students first.")
+        if query_one("SELECT * FROM HELP_REQUESTS INNER JOIN ASSIGNMENTS ON HELP_REQUESTS.assignment_id = ASSIGNMENTS.id WHERE ASSIGNMENTS.classroom_id = ?", (self.id,)):
+            raise ValueError("Cannot delete a classroom with help requests. Please resolve or remove help requests first.")
+        execute("DELETE FROM CLASSROOMS WHERE id = ?", (self.id,))
+        return True
 
     def publish(self):
         if self.is_published:
@@ -86,9 +100,11 @@ class Classroom:
         execute("DELETE FROM ENROLLMENTS WHERE classroom_id = ? AND student_id = ?", (self.id, student.id))
         return self
 
-    def get_assignments(self, published_only: bool = False):
+    def get_assignments(self, published_only: bool = False, unpublished_only: bool = False):
         if published_only:
             rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ? AND is_published = ?", (self.id, True))
+        elif unpublished_only:
+            rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ? AND is_published = ?", (self.id, False))
         else:
             rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ?", (self.id,))
         return [Assignment._from_row(row) for row in rows]
@@ -101,3 +117,11 @@ class Classroom:
         from .student import Student
         rows = query("SELECT USERS.* FROM USERS INNER JOIN ENROLLMENTS ON USERS.id = ENROLLMENTS.student_id WHERE ENROLLMENTS.classroom_id = ?", (self.id,))
         return [Student._from_row(row) for row in rows]
+
+    def get_help_requests(self, unresolved_only: bool = True):
+        from .help_request import HelpRequest
+        if unresolved_only:
+            rows = query("SELECT HELP_REQUESTS.* FROM HELP_REQUESTS INNER JOIN ASSIGNMENTS ON HELP_REQUESTS.assignment_id = ASSIGNMENTS.id WHERE ASSIGNMENTS.classroom_id = ? AND HELP_REQUESTS.resolved_at IS NULL", (self.id,))
+        else:
+            rows = query("SELECT HELP_REQUESTS.* FROM HELP_REQUESTS INNER JOIN ASSIGNMENTS ON HELP_REQUESTS.assignment_id = ASSIGNMENTS.id WHERE ASSIGNMENTS.classroom_id = ?", (self.id,))
+        return [HelpRequest._from_row(row) for row in rows]

@@ -1,0 +1,50 @@
+{% extends "app.html" %}
+{% from "macros.html" import attachment_list with context %}
+{% block title %}Material{% endblock %}
+{% block heading %}Material{% endblock %}
+{% block back %}
+<a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}">
+    {{ icon('left_chevron') }} Go back to {{ classroom.name }}
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Show the material details -->
+<div>
+    <h3>{{ material.title }}</h3>
+    <p>{{ material.description }}</p>
+    <h3><strong>Danger Zone:</strong></h3>
+    <form method="post" action="{{ url_for('teacher.delete_material', material_id=material.id) }}"
+        style="display:inline;">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <button type="submit"
+            onclick="return confirm('Are you sure you want to delete this material? This action cannot be undone.')">Delete
+            Material</button>
+    </form>
+</div>
+
+<!-- Show the material attachments -->
+<h4>Attachments</h4>
+{{ attachment_list(attachments, True) }}
+
+
+<!-- allow editing material details -->
+<form method="post" action="{{ url_for('teacher.edit_material', material_id=material.id) }}"
+    enctype="multipart/form-data">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" value="{{ material.title }}" required>
+    <br><br>
+    <label for="description">Description:</label>
+    <textarea id="description" name="description">{{ material.description }}</textarea>
+    <br><br>
+    <label for="link">Add {% if attachments %}additional {% endif %}link(s) to material:</label>
+    <textarea id="links" name="links" placeholder="Enter one link per line"></textarea>
+    <br><br>
+    <label for="file">Add {% if attachments %}additional {% endif %}file(s) to material:</label>
+    <input type="file" id="files" name="files" multiple>
+    <br><br>
+    <button type="submit">Update Material</button>
+</form>
+
+{% endblock %}

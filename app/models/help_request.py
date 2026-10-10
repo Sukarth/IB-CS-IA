@@ -56,7 +56,12 @@ class HelpRequest:
     @classmethod
     def get_unresolved_for_teacher(cls, teacher_id: int):
         rows = query("SELECT HELP_REQUESTS.* FROM HELP_REQUESTS INNER JOIN ASSIGNMENTS ON HELP_REQUESTS.assignment_id = ASSIGNMENTS.id INNER JOIN CLASSROOMS ON ASSIGNMENTS.classroom_id = CLASSROOMS.id WHERE HELP_REQUESTS.resolved_at IS NULL AND CLASSROOMS.teacher_id = ?", (teacher_id,))
-        return [HelpRequest._from_row(row) for row in rows]
+        return [cls._from_row(row) for row in rows]
+
+    @classmethod
+    def get_for_assignment(cls, assignment_id: int):
+        rows = query("SELECT * FROM HELP_REQUESTS WHERE assignment_id = ? ORDER BY created_at", (assignment_id,))
+        return [cls._from_row(row) for row in rows]
 
     def resolve(self, resolved_by_id: int, resolution_notes: str):
         if self.resolved_at is not None:

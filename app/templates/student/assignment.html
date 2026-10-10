@@ -1,4 +1,5 @@
 {% extends "app.html" %}
+{% from "macros.html" import attachment_list, assignment_type_info with context %}
 {% block title %}Assignment{% endblock %}
 {% block heading %}Assignment{% endblock %}
 {% block back %}
@@ -18,6 +19,7 @@
     <p>Status: {{ progress.status.value.replace('_', ' ').title() }}</p>
     <p>Hours Logged: {{ progress.hours_completed}}</p>
     <p>Notes: {{ progress.notes or '' }}</p>
+    {{ assignment_type_info(assignment) }}
 </div>
 
 <!-- Request Help -->
@@ -35,26 +37,12 @@
 </div>
 
 <!-- show submission info -->
-{% if not submission.is_submitted or progress.status in statuses %}
+{% if not submission or not submission.is_submitted or progress.status in statuses %}
     <h3>Attachments</h3>
     {% if attachments %}
         <h4>Previously Submitted Files</h4>
         <!-- Show a list of previously submitted attachments and allow deleting them -->
-        <ul>
-            {% for attachment in attachments %}
-                <li>
-                    {% if attachment.TYPE == 'LINK' %}
-                        <a href="{{ attachment.url }}" target="_blank" rel="noopener noreferrer">{{ attachment.link_text }}</a> (Link)
-                    {% else %}
-                        <a href="{{ url_for('student.download_attachment', classroom_id=classroom.id, assignment_id=assignment.id, attachment_id=attachment.id) }}" target="_blank" rel="noopener noreferrer">{{ attachment.original_filename }}</a> ({{ attachment.file_size_kb }} KB)
-                    {% endif %}
-                    <form method="post" action="{{ url_for('student.delete_attachment', classroom_id=classroom.id, assignment_id=assignment.id, attachment_id=attachment.id) }}" style="display:inline;">
-                        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-                        <button type="submit">Delete</button>
-                    </form>
-                </li>
-            {% endfor %}
-        </ul>
+        {{ attachment_list(attachments, True) }}
     {% endif %}
     <p>Attach {% if attachments %}additional links or files to{% else %}a link or a file to submit{% endif %} this assignment.</p>
     <form method="post" action="{{ url_for('student.submit_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}" enctype="multipart/form-data">

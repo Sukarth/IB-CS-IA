@@ -1,0 +1,163 @@
+{% extends "app.html" %}
+{% from "macros.html" import attachment_list, assignment_type_info with context %}
+{% block title %}Assignment{% endblock %}
+{% block heading %}Assignment{% endblock %}
+{% block back %}
+<a href="{{ url_for('teacher.classroom', classroom_id=assignment.classroom_id) }}">
+    {{ icon('left_chevron') }} Go back to classroom
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- show the assignment details -->
+<div>
+    <h2>{{ assignment.title }}</h2>
+    <p>{{ assignment.description }}</p>
+    <p>Estimated completion time: {{ (assignment.effort_hours // 24)|string + ' days, ' + (assignment.effort_hours %
+        24)|string + ' hours' if assignment.effort_hours >= 24 else assignment.effort_hours|string + ' hours' }}</p>
+    <p>Estimated Difficulty: {{ assignment.difficulty }}</p>
+    <p>Deadline: {{ assignment.deadline.strftime('%Y-%m-%d %H:%M') }}</p>
+    {{ assignment_type_info(assignment) }}
+    <h3><strong>Danger Zone:</strong></h3>
+    <form method="post" action="{{ url_for('teacher.delete_assignment', assignment_id=assignment.id) }}"
+        style="display:inline;">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <button type="submit"
+            onclick="return confirm('Are you sure you want to delete this assignment? This action cannot be undone.')">Delete
+            Assignment</button>
+    </form>
+</div>
+
+<!-- show the assignment stats -->
+<div>
+    <h3>Assignment Stats</h3>
+    <p>Assigned to: {{ completion_stats.total_students }} students</p>
+    <p>Completed by: {{ completion_stats.completion_count }} students ({{ completion_stats.completion_percentage }}%)
+    </p>
+    <p>First submitted at: {{ completion_stats.first_submission_at.strftime('%Y-%m-%d %H:%M') if
+        completion_stats.first_submission_at else 'No one has submitted this assignment yet' }}</p>
+    <p>Last submitted at: {{ completion_stats.last_submission_at.strftime('%Y-%m-%d %H:%M') if
+        completion_stats.last_submission_at else 'No one has submitted this assignment yet' }}</p>
+    <details>
+        <summary>Students who have completed the assignment:</summary>
+        <ul>
+            {% for student in completion_stats.completed_students %}
+            <li>
+                <a href="{{ url_for('teacher.student', student_id=student.id) }}">{{ student.name }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </details>
+    <details>
+        <summary>Students who have not yet completed the assignment:</summary>
+        <ul>
+            {% for student in completion_stats.pending_students %}
+            <li>
+                <a href="{{ url_for('teacher.student', student_id=student.id) }}">{{ student.name }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </details>
+    <p>Students who are yet to complete the assignment: {{ completion_stats.pending_students }}</p>
+</div>
+
+<!-- allow editing of the assignment -->
+<form method="post"
+    action="{{ url_for('teacher.edit_assignment', assignment_id=assignment.id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <label for="title">Title:</label>
+    <input type="text" id="title" name="title" value="{{ assignment.title }}" required>
+    <br><br>
+    <label for="description">Description:</label>
+    <textarea id="description" name="description">{{ assignment.description }}</textarea>
+    <br><br>
+    <label for="deadline">Deadline:</label>
+    <input type="datetime-local" id="deadline" name="deadline"
+        value="{{ assignment.deadline.strftime('%Y-%m-%dT%H:%M') }}" required>
+    <br><br>
+    <label for="effort_hours">Estimated Effort (in hours):</label>
+    <input type="number" id="effort_hours" name="effort_hours" value="{{ assignment.effort_hours }}" min="0.1" step="0.1" required>
+    <br><br>
+    <label for="difficulty">Estimated Difficulty:</label>
+    <select id="difficulty" name="difficulty" required>
+        {% for i in range(1, 6) %}
+        <option value="{{ i }}" {% if assignment.difficulty==i %}selected{% endif %}>{{ i }}</option>
+        {% endfor %}
+    </select>
+    <br><br>
+
+    {% if assignment.TYPE == 'ESSAY' %}
+        <label for="word_limit">Word Limit (0 = no limit):</label>
+        <input type="number" id="word_limit" name="word_limit" value="{{ assignment.word_limit }}" min="0" required>
+        <br><br>
+    {% elif assignment.TYPE == 'PROBLEMSET' %}
+        <label for="number_of_problems">Number of Problems (0 = not fixed):</label>
+        <input type="number" id="number_of_problems" name="number_of_problems" value="{{ assignment.number_of_problems }}" min="0" required>
+        <br><br>
+    {% elif assignment.TYPE == 'PROJECT' %}
+        <label for="min_group_size">Minimum Group Size:</label>
+        <input type="number" id="min_group_size" name="min_group_size" value="{{ assignment.min_group_size }}" min="1" required>
+        <br><br>
+        <label for="max_group_size">Maximum Group Size:</label>
+        <input type="number" id="max_group_size" name="max_group_size" value="{{ assignment.max_group_size }}" min="1" required>
+        <br><br>
+    {% endif %}
+
+    <label for="is_published">Is published:</label>
+    <input type="checkbox" id="is_published" name="is_published" {% if assignment.is_published %}checked{% endif %}>
+    <br><br>
+    <button type="submit">Update Assignment</button>
+</form>
+
+<!-- Show assignment submissions -->
+<h4>Submissions</h4>
+<ul>
+    {% for submission, student in submissions_students if submission %}
+    <li>
+        <a href="{{ url_for('teacher.submission', submission_id=submission.id) }}">Submitted by {{
+            student.name }} at {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+<!-- show assignment help requests -->
+<h4>Help Requests</h4>
+<details>
+    <summary>View Resolved Help Requests</summary>
+    <ul>
+        {% for help_request, student in resolved_help_requests_students if help_request.resolved_at %}
+        <li>
+            <a href="{{ url_for('teacher.help_request', help_request_id=help_request.id) }}">Help requested by {{ student.name }} at {{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}{% if help_request.is_urgent %} | Urgent{% endif %} | Resolved at {{ help_request.resolved_at.strftime('%Y-%m-%d %H:%M') }}</a>
+        </li>
+        {% endfor %}
+    </ul>
+</details>
+<ul>
+    {% for help_request, student in unresolved_help_requests_students %}
+    <li>
+        <a href="{{ url_for('teacher.help_request', help_request_id=help_request.id) }}">Help requested by {{ student.name }} at {{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}{% if help_request.is_urgent %} | Urgent{% endif %}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+<!-- Show assignment students' progress -->
+<h4>Progress</h4>
+<ul>
+    {% for student, progress, submission, help_request in progress_rows %}
+    <li>
+        <a href="{{ url_for('teacher.student', student_id=student.id) }}">{{ student.name }}</a> - 
+        {% if progress is none %}
+            Not started
+        {% else %}
+            {{ progress.status.replace('_', ' ').title() }}
+            {% if progress.status == 'COMPLETED' and submission %}
+                at {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}
+            {% elif progress.status == 'NEEDS_HELP' %}
+                . Requested help at {{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}
+            {% endif %}
+            | Total hours logged: {{ progress.hours_completed }} hours
+        {% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

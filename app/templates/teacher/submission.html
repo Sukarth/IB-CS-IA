@@ -1,0 +1,42 @@
+{% extends "app.html" %}
+{% from "macros.html" import attachment_list with context %}
+{% block title %}Submission{% endblock %}
+{% block heading %}Submission{% endblock %}
+{% block back %}
+<a href="{{ url_for('teacher.assignment', assignment_id=submission.assignment_id) }}">
+    {{ icon('left_chevron') }} Go back to {{ assignment.title }}
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Show the submission details -->
+{% set submitted = submission.is_submitted %}
+
+{% if not submitted %}
+    <h3>Assignment not submitted yet or is currently unsubmitted.</h3>
+{% endif %}
+
+<h3>{% if not submitted %}Last submitted by {% else %}Submitted by {% endif %}{{ student.name }}</h3>
+<p>{% if not submitted %}Last submitted at {% else %}Submitted at {% endif %}{{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+<p>Submission version: {{ submission.version }}</p>
+<h4>{% if not submitted %}Last feedback provided: {% else %}Feedback Provided: {% endif %}</h4>
+{% if submission.feedback %}
+    <p>{{ submission.feedback }}</p>
+{% else %}
+    <p>Feedback not yet provided.</p>
+{% endif %}
+
+<!-- Show the submission attachments -->
+<h4>Attachments</h4>
+{{ attachment_list(attachments) }}
+
+<!-- allow giving feedback -->
+<form method="post" action="{{ url_for('teacher.give_feedback', submission_id=submission.id) }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+    <label for="feedback">Provide feedback:</label>
+    <textarea id="feedback" name="feedback">{{ submission.feedback or '' }}</textarea>
+    <br><br>
+    <button type="submit">Submit Feedback</button>
+</form>
+{% endblock %}

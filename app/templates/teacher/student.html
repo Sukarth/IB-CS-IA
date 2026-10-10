@@ -1,0 +1,31 @@
+{% extends "app.html" %}
+{% block title %}Student{% endblock %}
+{% block heading %}Student{% endblock %}
+{% block back %}
+    <a href="{{ url_for('teacher.dashboard') }}">
+        {{ icon('left_chevron') }} Go back to dashboard
+    </a>
+{% endblock %}
+
+{% block content %}
+    <h2>{{ student.name }}</h2>
+    <p>Email: {{ student.email }}</p>
+    <p>ID: {{ student.id }}</p>
+
+    <h3>Progress on assignments</h3>
+    <ul>
+        {% for assignment, progress in assignments_completions_rows %}
+            <li>
+                <a href="{{ url_for('teacher.assignment', assignment_id=assignment.id) }}">{{ assignment.title }}</a>
+                {% if progress is none %}
+                    <span>Status: Not started</span>
+                {% else %}                
+                    <span>Status: {{ progress.status.value.replace('_', ' ').title() }}</span>
+                    <span>Last Updated: {{ progress.status_changed_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    <span>Hours Logged: {{ progress.hours_completed }}</span>
+                    <span>Notes: {{ progress.notes or '' }}</span>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

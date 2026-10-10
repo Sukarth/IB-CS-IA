@@ -16,6 +16,16 @@
     <p>Teacher: {{ teacher.name }}</p>
 </div>
 
+<!-- show the classroom materials -->
+<h3>Materials</h3>
+<ul>
+    {% for material in materials %}
+        <li>
+            <a href="{{ url_for('student.material', classroom_id=classroom.id, material_id=material.id) }}">{{ material.title }}</a>
+        </li>
+    {% endfor %}
+</ul>
+
 <!-- show the assignments -->
 <h3>Assignments</h3>
 
@@ -32,6 +42,8 @@
     </details>
 {% endif %}
 
+<!-- show the to-do assignments -->
+<h3>To Do</h3>
 <ul>
     {% for assignment in to_do %}
         <li>

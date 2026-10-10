@@ -15,6 +15,7 @@ class Material:
 
     @classmethod
     def create(cls, title: str, description: str, classroom_id: int, uploaded_by_id: int):
+        title = title.strip()
         if not title:
             raise ValueError("Material title cannot be blank!")
         if not classroom_id:
@@ -39,6 +40,7 @@ class Material:
         return cls._from_row(row)
     
     def update(self, title: str, description: str):
+        title = title.strip()
         if not title:
             raise ValueError("Material title cannot be blank!")
         

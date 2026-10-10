@@ -1,0 +1,19 @@
+{% extends "app.html" %}
+{% from "macros.html" import attachment_list with context %}
+{% block title %}Material{% endblock %}
+{% block heading %}Material{% endblock %}
+{% block back %}
+<a href="{{ url_for('student.classroom', classroom_id=classroom.id) }}">
+    {{ icon('left_chevron') }} Go back to {{ classroom.name }}
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Show the material details -->
+<h3>{{ material.title }}</h3>
+<p>{{ material.description }}</p>
+
+<!-- Show the material attachments -->
+<h4>Attachments</h4>
+{{ attachment_list(attachments) }}
+{% endblock %}

@@ -12,10 +12,11 @@ from app.models.help_request import HelpRequest
 from app.models.enums import ProgressStatus
 from app.models.file_attachment import FileAttachment
 from app.models.link_attachment import LinkAttachment
+from app.models.material import Material
 from app.models.attachment import Attachment
 from app.models.enums import UploadArea
 from app.database.uploads import upload_files, check_files, _delete_file, remove_attachment
-from urllib.parse import urlparse, urlparse
+from urllib.parse import urlparse
 
 import calendar
 from datetime import date
@@ -91,11 +92,21 @@ def settings():
 def classroom(classroom_id):
     classroom = _check_classroom(classroom_id)
     all_assignments = classroom.get_assignments(published_only=True)
+    materials = classroom.get_materials()
     to_do_ids = {a.id for a in Assignment.get_for_student(g.user.id)}
     to_do = [a for a in all_assignments if a.id in to_do_ids]
     submitted = [a for a in all_assignments if a.id not in to_do_ids]
     teacher = User.get_by_id(classroom.teacher_id)
-    return render_template('student/classroom.html', classroom=classroom, to_do=to_do, submitted=submitted, teacher=teacher)
+    return render_template('student/classroom.html', classroom=classroom, to_do=to_do, submitted=submitted, teacher=teacher, materials=materials)
+
+@bp.route('/classroom/<int:classroom_id>/material/<int:material_id>/', methods=('GET',))
+def material(classroom_id, material_id):
+    classroom = _check_classroom(classroom_id)
+    material = Material.get_by_id(material_id)
+    if not material or material.classroom_id != classroom_id:
+        abort(404)
+    attachments = material.get_attachments()
+    return render_template('student/material.html', classroom=classroom, material=material, attachments=attachments)
 
 @bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/', methods=('GET',))
 def assignment(classroom_id, assignment_id):

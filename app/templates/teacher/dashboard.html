@@ -5,4 +5,58 @@
 
 {% block content %}
     <p>This is the teacher dashboard. Welcome. You are a teacher.</p>
+
+    <h3>Your Classes:</h3>
+
+    {% if unpublished_classrooms %}
+        <details>
+            <summary>View {{ unpublished_classrooms|length }} unpublished classes</summary>
+            <ul>
+                {% for class in unpublished_classrooms %}
+                    <li>{{ class.name }}
+                        <a href="{{ url_for('teacher.classroom', classroom_id=class.id) }}">
+                            {{ icon('right_chevron') }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </details>
+    {% endif %}
+
+    <ul>
+        {% for class in published_classrooms %}
+            <li>{{ class.name }}
+                <a href="{{ url_for('teacher.classroom', classroom_id=class.id) }}">
+                    {{ icon('right_chevron') }}
+                </a>
+            </li>
+        {% else %}
+            <li>No published classes found.</li>
+        {% endfor %}
+    </ul>
+
+    <h3>Create a New Classroom:</h3>
+    <form method="post" action="{{ url_for('teacher.create_classroom') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="classroom_name">Classroom name:</label>
+        <input type="text" id="name" name="name" required>
+        <br><br>
+        <label for="classroom_description">Classroom description:</label>
+        <textarea id="description" name="description"></textarea>
+        <br><br>
+        <label for="is_published">Publish upon creation:</label>
+        <input type="checkbox" id="is_published" name="is_published">
+        <br><br>
+        <button type="submit">Create Classroom</button>
+    </form>
+    
+
+    <p>Open help requests:</p>
+    <ul>
+        {% for help_request in help_requests %}
+            <li>
+                <a href="{{ url_for('teacher.help_request', help_request_id=help_request.id) }}">{{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}{% if help_request.is_urgent %} - <b>Urgent</b>{% endif %}</a>
+            </li>
+        {% endfor %}
+    </ul>
 {% endblock %}

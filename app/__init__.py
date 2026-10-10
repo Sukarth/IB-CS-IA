@@ -28,12 +28,16 @@ def create_app(test_config=None):
     from . import database
     database.init_db()
 
-    from .routes import auth, main, admin, teacher, student
+    from jinja2 import StrictUndefined
+    app.jinja_env.undefined = StrictUndefined
+
+    from .routes import auth, main, admin, teacher, student, files
     app.register_blueprint(main.bp)
     app.register_blueprint(auth.bp)
     app.register_blueprint(admin.bp)
     app.register_blueprint(teacher.bp)
     app.register_blueprint(student.bp)
+    app.register_blueprint(files.bp)
 
     return app
 

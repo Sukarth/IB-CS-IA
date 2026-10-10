@@ -4,11 +4,12 @@ from .completion_stats import CompletionStats
 from datetime import datetime
 from .work_chunk import WorkChunk
 from abc import ABC, abstractmethod
+import math
 
 class Assignment(ABC):
     TYPE = None
     
-    def __init__(self, id: int, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: int, difficulty: int, is_published: bool):
+    def __init__(self, id: int, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool):
         self.id = id
         self.classroom_id = classroom_id
         self.title = title
@@ -20,6 +21,7 @@ class Assignment(ABC):
 
     @classmethod
     def _insert(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, **extra):
+        title = title.strip()
         if cls.TYPE is None:
             raise TypeError("Assignment is abstract. Use a subclass!")
         if not classroom_id:
@@ -30,6 +32,8 @@ class Assignment(ABC):
             raise ValueError("Assignment title cannot be blank!")
         if not deadline or deadline < datetime.now():
             raise ValueError("Assignment deadline must be a future date!")
+        if not math.isfinite(effort_hours):
+            raise ValueError("Effort hours must be a valid finite number!")
         if effort_hours <= 0:
             raise ValueError("Effort hours must be greater than zero!")
         if difficulty < 1 or difficulty > 5:
@@ -51,8 +55,11 @@ class Assignment(ABC):
         return cls._from_row(row)
      
     def _update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, **extra):
+        title = title.strip()
         if not title:
             raise ValueError("Assignment title cannot be blank!")
+        if not math.isfinite(effort_hours):
+            raise ValueError("Effort hours must be a valid finite number!")
         if effort_hours <= 0:
             raise ValueError("Effort hours must be greater than zero!")
         if not deadline:
