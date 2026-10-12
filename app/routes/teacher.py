@@ -157,6 +157,52 @@ def delete_classroom(classroom_id):
 
     return redirect(url_for('teacher.dashboard'))
 
+@bp.route('/classroom/<int:classroom_id>/analytics', methods=('GET',))
+def classroom_analytics(classroom_id):
+    classroom = _check_classroom(classroom_id)
+    assignments = classroom.get_assignments(True)
+    length = len(assignments)
+    assignment_query = request.args.get('assignment_query', '').strip().lower()
+    name_query = request.args.get('name_query', '').strip().lower()
+
+    students = classroom.get_students()
+    counts = {student.id: 0 for student in students}
+    for assignment in assignments:
+        for student in assignment.get_completion().completed_students:
+            counts[student.id] += 1
+
+    filtered_students = [(student, (counts[student.id] * 100) / length if length > 0 else 0) for student in classroom.get_students() if name_query in student.name.lower()]
+    
+    filtered_assignments = []
+    for assignment in assignments:
+        if assignment_query not in assignment.title.lower():
+            continue
+
+        completion_hours = []
+        for student in students:
+            progress = ProgressRecord.get_progress(student, assignment)
+            if progress and progress.status == ProgressStatus.COMPLETED and progress.hours_completed > 0:
+                completion_hours.append(progress.hours_completed)
+        
+        avg_actual_hours = sum(completion_hours) / len(completion_hours) if completion_hours else None
+        hours_difference = avg_actual_hours - assignment.effort_hours if avg_actual_hours else None
+
+        filtered_assignments.append((assignment, CompletionStats.get_by_assignment(assignment).completion_percentage, assignment.effort_hours, avg_actual_hours, hours_difference, len(completion_hours)))
+    
+    classroom_completion_stats = sorted(filtered_students, key=lambda row: (-row[1], row[0].name))
+    assignment_completion_stats = sorted(filtered_assignments, key=lambda row: (row[1], row[0].title))
+
+    # submissions that are submitted but still have no feedback
+    empty_feedback_submissions = []
+    for assignment in assignments:
+        for student in students:
+            submission = Submission.get_by_student_and_assignment(student, assignment)
+            if submission and submission.is_submitted and not submission.feedback.strip():
+                empty_feedback_submissions.append((submission, assignment, student))
+    empty_feedback_submissions.sort(key=lambda row: row[0].submitted_at)
+    
+    return render_template('teacher/analytics.html', classroom=classroom, classroom_completion_stats=classroom_completion_stats, assignment_completion_stats=assignment_completion_stats, assignment_query=assignment_query, name_query=name_query, empty_feedback_submissions=empty_feedback_submissions)
+
 @bp.route('/classroom/<int:classroom_id>/material/create', methods=('POST',))
 def create_material(classroom_id):
     classroom = _check_classroom(classroom_id)
@@ -230,8 +276,13 @@ def assignment(assignment_id):
     resolved_help_requests_students = [i for i in help_requests_students if i[0].resolved_at]
     unresolved_help_requests_students = [i for i in help_requests_students if not i[0].resolved_at]
     submissions_students = zip(submissions, students)
+
+    status_counts = {status: 0 for status in ProgressStatus}
+    for student in students:
+        progress = ProgressRecord.get_progress(student, assignment)
+        status_counts[progress.status if progress else ProgressStatus.NOT_STARTED] += 1
     
-    return render_template('teacher/assignment.html', assignment=assignment, resolved_help_requests_students=resolved_help_requests_students, unresolved_help_requests_students=unresolved_help_requests_students, submissions_students=submissions_students, completion_stats=completion_stats, progress_rows=_progress_rows(assignment, classroom, g.user))
+    return render_template('teacher/assignment.html', assignment=assignment, resolved_help_requests_students=resolved_help_requests_students, unresolved_help_requests_students=unresolved_help_requests_students, submissions_students=submissions_students, completion_stats=completion_stats, progress_rows=_progress_rows(assignment, classroom, g.user), not_started_count=status_counts[ProgressStatus.NOT_STARTED], in_progress_count=status_counts[ProgressStatus.IN_PROGRESS], completed_count=status_counts[ProgressStatus.COMPLETED], needs_help_count=status_counts[ProgressStatus.NEEDS_HELP])
 
 @bp.route('/assignment/<int:assignment_id>/edit', methods=('POST',))
 def edit_assignment(assignment_id):

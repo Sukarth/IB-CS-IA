@@ -14,6 +14,7 @@
     <h2>{{ classroom.name }}</h2>
     <p>{{ classroom.description }}</p>
     <p><strong>Published:</strong> {{ classroom.is_published|lower }}</p>
+    <a href="{{ url_for('teacher.classroom_analytics', classroom_id=classroom.id) }}">View Classroom's Analytics</a>
     <h3><strong>Danger Zone:</strong></h3>
     <form method="post" action="{{ url_for('teacher.delete_classroom', classroom_id=classroom.id) }}" style="display:inline;">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">

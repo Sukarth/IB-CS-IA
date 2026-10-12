@@ -1,0 +1,71 @@
+{% extends 'app.html' %}
+{% block title %}Classroom Analytics{% endblock %}
+{% block heading %}Classroom Analytics{% endblock %}
+{% block back %}
+<a href="{{ url_for('teacher.classroom', classroom_id=classroom.id) }}">
+    {{ icon('left_chevron') }} Go back to classroom
+</a>
+{% endblock %}
+{% block content %}
+<form method="get">
+    <h2>Students sorted by assignment completion</h2>
+    <input type="text" name="name_query" value="{{ name_query }}">
+    <button type="submit">Search students</button>
+    
+    <ul>
+        {% for student, completion_percent in classroom_completion_stats %}
+        <li>
+            <a href="{{ url_for('teacher.student', student_id=student.id) }}">
+                {{ student.name }}
+            </a>
+            : {{ completion_percent|round(2) }}% of assignments completed
+        </li>
+        {% else %}
+            <li>No students found</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Assignments sorted by completion</h2>
+    <input type="text" name="assignment_query" value="{{ assignment_query }}">
+    <button type="submit">Search assignments</button>
+
+    <ul>
+        {% for assignment, completion_percent, estimated_hours, actual_hours, hours_difference, length in assignment_completion_stats %}
+        <li>
+            <a href="{{ url_for('teacher.assignment', assignment_id=assignment.id) }}">
+                {{ assignment.title }}
+            </a>
+            : {{ completion_percent|round(2) }}% of students completed this assignment
+            <br>
+            Estimated completion hours: {{ estimated_hours|round(1) }}
+            <br>
+            {% if actual_hours is not none %}
+                Actual average completion hours (from {{ length }} student(s)): {{ actual_hours|round(1) }}
+                <br>
+                Difference in hours: {{ '+' if hours_difference > 0 }}{{ hours_difference|round(1) }}
+            {% else %}
+                Actual average completion hours: No hours logged yet
+            {% endif %}
+        </li>
+        {% else %}
+            <li>No assignments found</li>
+        {% endfor %}
+    </ul>
+</form>
+
+<h2>Assignment submissions that still need to be reviewed:</h2>
+<p>There are {{ empty_feedback_submissions|length }} submission(s) that need to be reviewed (no feedback given).</p>
+<ul>
+    {% for submission, assignment, student in empty_feedback_submissions %}
+        <li>
+            <a href="{{ url_for('teacher.submission', submission_id=submission.id) }}">
+                {{ assignment.title }}
+            </a>
+             - submitted by {{ student.name }} at: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}
+        </li>
+    {% else %}
+        <li>No unreviewed submissions found</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

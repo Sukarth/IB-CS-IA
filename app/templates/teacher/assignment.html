@@ -17,6 +17,7 @@
         24)|string + ' hours' if assignment.effort_hours >= 24 else assignment.effort_hours|string + ' hours' }}</p>
     <p>Estimated Difficulty: {{ assignment.difficulty }}</p>
     <p>Deadline: {{ assignment.deadline.strftime('%Y-%m-%d %H:%M') }}</p>
+    <p>Published: {{ assignment.is_published|lower }}</p>
     {{ assignment_type_info(assignment) }}
     <h3><strong>Danger Zone:</strong></h3>
     <form method="post" action="{{ url_for('teacher.delete_assignment', assignment_id=assignment.id) }}"
@@ -32,12 +33,16 @@
 <div>
     <h3>Assignment Stats</h3>
     <p>Assigned to: {{ completion_stats.total_students }} students</p>
-    <p>Completed by: {{ completion_stats.completion_count }} students ({{ completion_stats.completion_percentage }}%)
+    <p>Completed by: {{ completion_stats.completion_count }} students ({{ completion_stats.completion_percentage|round(2) }}%)
     </p>
     <p>First submitted at: {{ completion_stats.first_submission_at.strftime('%Y-%m-%d %H:%M') if
         completion_stats.first_submission_at else 'No one has submitted this assignment yet' }}</p>
     <p>Last submitted at: {{ completion_stats.last_submission_at.strftime('%Y-%m-%d %H:%M') if
         completion_stats.last_submission_at else 'No one has submitted this assignment yet' }}</p>
+    <p>Number of students who have not started the assignment yet: {{ not_started_count }}</p>
+    <p>Number of students who are currently working on the assignment: {{ in_progress_count }}</p>
+    <p>Number of students who have completed the assignment: {{ completed_count }}</p>
+    <p>Number of students who need help with the assignment: {{ needs_help_count }}</p>
     <details>
         <summary>Students who have completed the assignment:</summary>
         <ul>
@@ -58,7 +63,6 @@
             {% endfor %}
         </ul>
     </details>
-    <p>Students who are yet to complete the assignment: {{ completion_stats.pending_students }}</p>
 </div>
 
 <!-- allow editing of the assignment -->
