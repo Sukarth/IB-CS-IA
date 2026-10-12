@@ -18,7 +18,7 @@ def dashboard():
         if year_group and role != UserRole.STUDENT:
             if role:
                 flash("The filter role has automatically been set to 'Student', as filtering by year group is only applicable to students.")
-        role = UserRole.STUDENT
+            role = UserRole.STUDENT
         
         users = User.get_all(role, year_group, activated)
 
