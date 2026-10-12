@@ -1,0 +1,54 @@
+{% extends "app.html" %}
+{% block title %}Year Group{% endblock %}
+{% block heading %}Year Group{% endblock %}
+{% block back %}
+<a href="{{ url_for('admin.dashboard') }}">
+    {{ icon('left_chevron') }} Go back to dashboard
+</a>
+{% endblock %}
+
+{% block content %}
+    <h2>Year Group: {{ year_group.name }} (ID: {{ year_group.id }})</h2>
+    <p>Total students in this year group: {{ students|length }}</p>
+    <h3>Students</h3>
+    {% if students %}
+        <ul>
+            {% for student in students %}
+                <li>Name: {{ student.name }} | ID: {{ student.id }} | User enabled: {{ student.is_active|title }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No students found in this year group.</p>
+    {% endif %}
+
+    <h3>Add Student to Year Group</h3>
+    <form method="post" action="{{ url_for('admin.add_student_to_year_group', year_group_id=year_group.id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="add_student_id">Student ID:</label>
+        <input type="number" id="add_student_id" name="add_student_id" required>
+        <button type="submit">Add Student</button>
+    </form>
+
+    <h3>Remove Student from Year Group</h3>
+    <form method="post" action="{{ url_for('admin.remove_student_from_year_group', year_group_id=year_group.id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="remove_student_id">Student ID:</label>
+        <input type="number" id="remove_student_id" name="remove_student_id" required>
+        <button type="submit">Remove Student</button>
+    </form>
+
+    <h3>Rename Year Group</h3>
+    <form method="post" action="{{ url_for('admin.rename_year_group', year_group_id=year_group.id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="name">New name:</label>
+        <input type="text" id="name" name="name" required>
+        <button type="submit">Rename</button>
+    </form>
+
+    <h3>Delete Year Group</h3>
+    <form method="post" action="{{ url_for('admin.delete_year_group', year_group_id=year_group.id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <button type="submit" onclick="return confirm('Are you sure you want to delete this year group? This action cannot be undone.')">Delete Year Group</button>
+    </form>
+
+{% endblock %}

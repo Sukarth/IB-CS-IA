@@ -59,10 +59,16 @@ class YearGroup:
     
     def delete(self):
         if query_one("SELECT * FROM USERS WHERE year_group_id = ?", (self.id,)):
-            raise ValueError("Cannot delete a year group that has students assigned to it!")
+            raise ValueError("Cannot delete a year group that has student(s) assigned to it!")
         execute("DELETE FROM YEAR_GROUPS WHERE id = ?", (self.id,))
         return True
 
+    @classmethod
+    def get_all(cls):
+        rows = query("SELECT * FROM YEAR_GROUPS")
+        return [cls._from_row(row) for row in rows]
+
+    
     @classmethod
     def get_by_id(cls, id: int):
         row = query_one("SELECT * FROM YEAR_GROUPS WHERE id = ?", (id,))

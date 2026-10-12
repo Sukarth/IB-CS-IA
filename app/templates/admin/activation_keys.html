@@ -1,0 +1,85 @@
+{% extends 'app.html' %}
+{% block title %}Activation Keys{% endblock %}
+{% block heading %}Activation Keys{% endblock %}
+{% block back %}
+<a href="{{ url_for('admin.dashboard') }}">
+    {{ icon('left_chevron') }} Go back to dashboard
+</a>
+{% endblock %}
+
+{% block content %}
+    <p>Total activation keys: {{ key_count }}</p>
+    {% if new_keys %}
+        <h2>Newly Generated Activation Keys (shown only once):</h2>
+        <ul>
+            {% for key in new_keys %}
+                <li>{{ key }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <h1>Activation Keys</h1>
+    {% if keys %}
+        <ul>
+            {% for key in keys %}
+                <li>
+                    Role: {{ key.role_to_assign.value }} | Valid until: {{ key.expires_at.strftime('%Y-%m-%d') }}{% if key.year_group_id %} | Year Group ID: {{ key.year_group_id }}{% endif %} | Is used: {{ key.is_used|title }}{% if key.is_used %} | Used at: {{ key.used_at.strftime('%Y-%m-%d') }} | Used by user ID: {{ key.used_by_id }}{% endif %}
+                    {% if not key.is_used %}
+                        <form method="post" action="{{ url_for('admin.delete_activation_key', key_id=key.id) }}" style="display:inline;">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                            <button type="submit">Delete Key</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No activation keys found.</p>
+    {% endif %}
+
+    <h1>Generate Activation Keys</h1>
+    <form method="post" action="{{ url_for('admin.generate_activation_keys') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="count">Number of activation keys to generate:</label>
+        <input type="number" id="count" name="count" min="1" value="1" step="1" max="{{ max_count }}" required>
+        <br><br>
+        <label for="role">Role to grant:</label>
+        <select id="role" name="role" required>
+            <option value="STUDENT" selected>Student</option>
+            <option value="TEACHER">Teacher</option>
+            <option value="ADMIN">Admin</option>
+        </select>
+        <br><br>
+        <label for="validity">Validity in days:</label>
+        <input type="number" id="validity" name="validity" min="1" value="1" required>
+        <br><br>
+        <label for="year_group_id">Year group to assign:</label>
+        <select id="year_group_id" name="year_group_id" required>
+            {% for group in year_groups %}
+                <option value="{{ group.id }}">{{ group.name }} (ID: {{ group.id }})</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <button type="submit">Generate</button>
+    </form>
+
+    <script>
+        //show year group id input if student role is selected
+        const roleSelect = document.getElementById('role');
+        const yearGroupInput = document.getElementById('year_group_id');
+        const yearGroupLabel = document.querySelector('label[for="year_group_id"]');
+        function toggleYearGroupID() {
+            if (roleSelect.value === 'STUDENT') {
+                yearGroupLabel.hidden = false;
+                yearGroupInput.hidden = false;
+                yearGroupInput.disabled = false;
+            } else {
+                yearGroupLabel.hidden = true;
+                yearGroupInput.hidden = true;
+                yearGroupInput.disabled = true;
+            }
+        }
+        roleSelect.addEventListener('change', toggleYearGroupID);
+        toggleYearGroupID();
+    </script>
+
+{% endblock %}

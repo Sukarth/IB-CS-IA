@@ -167,6 +167,30 @@ class User(ABC):
 
         return self
 
+    @classmethod
+    def get_all(cls, role=None, year_group_id=None, activated=None):
+        query_str = "SELECT * FROM USERS WHERE 6 = 6"
+        params = []
+
+        if role is not UserRole.STUDENT and year_group_id:
+            raise ValueError("Year group ID can only be specified for students!")
+
+        if role is not None:
+            query_str += " AND role = ?"
+            params.append(role)
+
+        if year_group_id is not None:
+            query_str += " AND year_group_id = ?"
+            params.append(year_group_id)
+        
+        if activated is not None:
+            query_str += " AND is_active = ?"
+            params.append(activated)
+
+        query_str += " ORDER BY name"
+
+        return [cls._from_row(row) for row in query(query_str, tuple(params))]
+
     @abstractmethod
     def get_classrooms(self):
         ...

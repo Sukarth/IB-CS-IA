@@ -1,8 +1,96 @@
 {% extends 'app.html' %}
-
 {% block title %}Admin Dashboard{% endblock %}
 {% block heading %}Admin Dashboard{% endblock %}
 
 {% block content %}
-    <p>This is the admin dashboard. Welcome. You are an admin.</p>
+    <!-- Show all users -->
+    <h2>Users</h2>
+    <p>Total users: {{ users|length }}</p>
+    <!-- Filter conrols -->
+    <form method="get" action="{{ url_for('admin.dashboard') }}">
+        <label for="role">Filter by role:</label>
+        <select id="role" name="role">
+            <option value="all" {% if role == none %}selected{% endif %}>All</option>
+            <option value="STUDENT" {% if role == 'STUDENT' %}selected{% endif %}>Student</option>
+            <option value="TEACHER" {% if role == 'TEACHER' %}selected{% endif %}>Teacher</option>
+            <option value="ADMIN" {% if role == 'ADMIN' %}selected{% endif %}>Admin</option>
+        </select>
+        <label for="year_group">Filter by year group (will only show students):</label>
+        <select id="year_group" name="year_group">
+            <option value="all" {% if year_group == none %}selected{% endif %}>All</option>
+            {% for group in year_groups %}
+                <option value="{{ group.id }}" {% if year_group == group.id %}selected{% endif %}>{{ group.name }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <label for="activated">Filter by activation status:</label>
+        <select id="activated" name="activated">
+            <option value="all" {% if activated == none %}selected{% endif %}>All</option>
+            <option value="activated" {% if activated == True %}selected{% endif %}>Activated</option>
+            <option value="not_activated" {% if activated == False %}selected{% endif %}>Not Activated</option>
+        </select>
+        <br><br>
+        <button type="submit">Filter</button>
+    </form>
+    {% if users %}
+        <ul>
+            {% for user in users %}
+                <li>
+                    <p>Name: {{ user.name }}</p>
+                    <p>Role: {{ user.role.value }}</p>
+                    <p>ID: {{ user.id }}</p>
+                    {% if user.role == 'STUDENT' %}
+                        <p>Year Group: {{ year_group_names.get(user.year_group_id, 'Unknown') }} | ID: {{ user.year_group_id }}</p>
+                    {% endif %}
+                    <p>User activated: {{ user.is_active|title }}</p>
+                    {% if user.is_active %}
+                        <form method="post" action="{{ url_for('admin.deactivate_user', user_id=user.id) }}" style="display:inline;">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" onclick="return confirm('Are you sure you want to deactivate this user?')">Deactivate User</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{{ url_for('admin.activate_user', user_id=user.id) }}" style="display:inline;">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                            <button type="submit" onclick="return confirm('Are you sure you want to activate this user?')">Activate User</button>
+                        </form>
+                    {% endif %}
+                    {% if user.role == 'STUDENT' %}
+                        <form method="post" action="{{ url_for('admin.change_year_group', user_id=user.id) }}" style="display:inline;">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+                            <label for="year_group_id_{{ user.id }}">New year group to assign:</label>
+                            <select id="year_group_id_{{ user.id }}" name="year_group_id" required>
+                                {% for group in year_groups %}
+                                <option value="{{ group.id }}">{{ group.name }} (ID: {{ group.id }})</option>
+                                {% endfor %}
+                            </select>
+                            <br><br>
+                            <button type="submit">Change Year Group</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No users found.</p>
+    {% endif %}
+
+    <h2>Year Groups</h2>
+    <p>Total year groups: {{ year_groups|length }}</p>
+    
+    {% for year_group in year_groups %}
+        <a href="{{ url_for('admin.year_group', year_group_id=year_group.id) }}">{{ year_group.name }} | ID: {{ year_group.id }}</a><br>
+    {% endfor %}
+
+    <h3>Create New Year Group</h3>
+    <form method="post" action="{{ url_for('admin.create_year_group') }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="name">Create a new year group:</label>
+        <input type="text" id="name" name="name" required>
+        <button type="submit">Create Year Group</button>
+    </form>
+
+    <h2>Activation Keys</h2>
+    <p>Total activation keys: {{ key_count }}</p>
+    <a href="{{ url_for('admin.activation_keys') }}">Manage Activation Keys</a>
+
 {% endblock %}

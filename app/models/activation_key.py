@@ -79,6 +79,11 @@ class ActivationKey:
     def _from_row(cls, row):
         return cls(row['id'], row['key_hash'], UserRole(row['role_to_assign']), row['created_by_id'], datetime.fromisoformat(row['created_at']), datetime.fromisoformat(row['expires_at']), bool(row['is_used']), row['year_group_id'], row['used_by_id'], datetime.fromisoformat(row['used_at']) if row['used_at'] else None)
 
+    @classmethod
+    def get_all(cls):
+        rows = query("SELECT * FROM ACTIVATION_KEYS ORDER BY id DESC")
+        return [cls._from_row(row) for row in rows]
+
     def mark_used(self, used_by_user: User):
         if self.is_used:
             raise ValueError("Activation key has already been used!")
@@ -97,3 +102,8 @@ class ActivationKey:
             raise ValueError("Cannot delete an activation key that has already been used!")
         execute("DELETE FROM ACTIVATION_KEYS WHERE id = ?", (self.id,))
         return True
+
+    @staticmethod
+    def get_count():
+        row = query_one("SELECT COUNT(*) as count FROM ACTIVATION_KEYS")
+        return row['count'] if row else 0
