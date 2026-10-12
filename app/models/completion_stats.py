@@ -23,16 +23,16 @@ class CompletionStats:
     @classmethod
     def get_by_assignment(cls, assignment: Assignment):
         total_students = query_one("SELECT COUNT(*) as total FROM ENROLLMENTS WHERE classroom_id = ?", (assignment.classroom_id,))
-        completion_count = query_one("SELECT COUNT(DISTINCT student_id) as completed FROM PROGRESS_RECORDS WHERE assignment_id = ? AND status = ?", (assignment.id, ProgressStatus.COMPLETED.value))
+        completion_count = query_one("SELECT COUNT(DISTINCT student_id) as completed FROM PROGRESS_RECORDS WHERE assignment_id = ? AND status = ? AND student_id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)" , (assignment.id, ProgressStatus.COMPLETED.value, assignment.classroom_id))
         completion_percentage = (completion_count['completed'] / total_students['total']) * 100 if total_students['total'] > 0 else 0
         
-        completed_students_rows = query("SELECT DISTINCT USERS.* FROM USERS INNER JOIN PROGRESS_RECORDS ON USERS.id = PROGRESS_RECORDS.student_id WHERE PROGRESS_RECORDS.assignment_id = ? AND PROGRESS_RECORDS.status = ?", (assignment.id, ProgressStatus.COMPLETED.value))
+        completed_students_rows = query("SELECT DISTINCT USERS.* FROM USERS INNER JOIN PROGRESS_RECORDS ON USERS.id = PROGRESS_RECORDS.student_id WHERE PROGRESS_RECORDS.assignment_id = ? AND PROGRESS_RECORDS.status = ? AND USERS.id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, ProgressStatus.COMPLETED.value, assignment.classroom_id))
         completed_students = [Student._from_row(row) for row in completed_students_rows]
         
         pending_students_rows = query("SELECT * FROM USERS WHERE USERS.id NOT IN (SELECT DISTINCT student_id FROM PROGRESS_RECORDS WHERE assignment_id = ? AND status = ?) AND USERS.id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, ProgressStatus.COMPLETED.value, assignment.classroom_id))
         pending_students = [Student._from_row(row) for row in pending_students_rows]
         
-        row = query_one("SELECT MIN(submitted_at) AS first, MAX(submitted_at) AS last FROM SUBMISSIONS WHERE assignment_id = ?", (assignment.id,))
+        row = query_one("SELECT MIN(submitted_at) AS first, MAX(submitted_at) AS last FROM SUBMISSIONS WHERE assignment_id = ? AND student_id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, assignment.classroom_id))
         first_submission_at = datetime.fromisoformat(row['first']) if row['first'] else None
         last_submission_at = datetime.fromisoformat(row['last']) if row['last'] else None
         
