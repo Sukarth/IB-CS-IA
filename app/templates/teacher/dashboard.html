@@ -3,7 +3,7 @@
 {% block heading %}Teacher Dashboard{% endblock %}
 
 {% block content %}
-    <p>This is the teacher dashboard. Welcome. You are a teacher.</p>
+    <p>Welcome to your dashboard, {{ g.user.name }}!</p>
 
     <h3>Your Classes:</h3>
 
@@ -38,10 +38,10 @@
     <form method="post" action="{{ url_for('teacher.create_classroom') }}">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
         <label for="classroom_name">Classroom name:</label>
-        <input type="text" id="name" name="name" required>
+        <input type="text" id="classroom_name" name="classroom_name" required>
         <br><br>
         <label for="classroom_description">Classroom description:</label>
-        <textarea id="description" name="description"></textarea>
+        <textarea id="classroom_description" name="classroom_description"></textarea>
         <br><br>
         <label for="is_published">Publish upon creation:</label>
         <input type="checkbox" id="is_published" name="is_published">
@@ -52,9 +52,14 @@
 
     <p>Open help requests:</p>
     <ul>
-        {% for help_request in help_requests %}
+        {% for help_request, student, assignment in help_requests %}
             <li>
-                <a href="{{ url_for('teacher.help_request', help_request_id=help_request.id) }}">{{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}{% if help_request.is_urgent %} - <b>Urgent</b>{% endif %}</a>
+                <a href="{{ url_for('teacher.help_request', help_request_id=help_request.id) }}">
+                    Help requested by {{ student.name }} for assignment {{ assignment.title }} on {{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    {% if help_request.is_urgent %}
+                     - <b>Urgent</b>
+                    {% endif %}
+                </a>
             </li>
         {% endfor %}
     </ul>

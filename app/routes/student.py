@@ -1,4 +1,4 @@
-from flask import Blueprint, g, redirect, render_template, url_for, flash, request, abort, current_app as app, send_from_directory
+from flask import Blueprint, g, redirect, render_template, url_for, flash, request, abort, current_app as app
 from app.security.decorators import check_role
 from app.models.enums import UserRole
 from app.models.assignment import Assignment
@@ -11,11 +11,8 @@ from app.models.progress_record import ProgressRecord
 from app.models.help_request import HelpRequest
 from app.models.enums import ProgressStatus
 from app.models.file_attachment import FileAttachment
-from app.models.link_attachment import LinkAttachment
 from app.models.material import Material
-from app.models.attachment import Attachment
-from app.models.enums import UploadArea
-from app.database.uploads import upload_files, check_files, _delete_file, remove_attachment
+from app.database.uploads import upload_files, check_files, _delete_file
 from urllib.parse import urlparse
 
 import calendar
@@ -42,6 +39,10 @@ def schedule():
         year  = request.args.get('year',  today.year,  type=int)
         month = request.args.get('month', today.month, type=int)
 
+        if not 1 <= month <= 12 or not 1900 <= year <= 2100:
+            flash("Invalid month or year. Showing current month and year instead.")
+            year, month = today.year, today.month
+        
         if month == 1:
             prev_month = 12
             prev_year = year - 1
@@ -80,7 +81,11 @@ def settings():
         form['exclude_overdue'] = 'exclude_overdue' in request.form
 
         try:
-            student_settings.update_settings(float(form['procrastination_factor']), bool(form['exclude_overdue']), *[float(form['hours_free_' + day]) for day in days])
+            proc_factor = request.form.get('procrastination_factor', type=float)
+            hours_free = [request.form.get('hours_free_' + day, type=float) for day in days]
+            if proc_factor is None or None in hours_free:
+                raise ValueError("Please enter a valid number in all fields.")
+            student_settings.update_settings(proc_factor, bool(form['exclude_overdue']), *hours_free)
             flash('Settings updated successfully.')
             return redirect(url_for('student.settings'))
         except ValueError as ve:
@@ -114,7 +119,13 @@ def assignment(classroom_id, assignment_id):
     submission = Submission.get_by_student_and_assignment(g.user, assignment)
     progress = ProgressRecord.get_or_create(g.user, assignment)
     attachments = submission.get_attachments() if submission else []
-    return render_template('student/assignment.html', assignment=assignment, classroom=classroom, submission=submission, attachments=attachments, progress=progress, statuses=(ProgressStatus.NOT_STARTED, ProgressStatus.IN_PROGRESS))
+    help_requests = [help_request for help_request in HelpRequest.get_for_assignment(assignment.id) if help_request.student_id == g.user.id]
+    statuses = (ProgressStatus.NOT_STARTED, ProgressStatus.IN_PROGRESS)
+    
+    if progress.status == ProgressStatus.NEEDS_HELP:
+        statuses = (ProgressStatus.NOT_STARTED, ProgressStatus.IN_PROGRESS, ProgressStatus.NEEDS_HELP)
+    
+    return render_template('student/assignment.html', assignment=assignment, classroom=classroom, submission=submission, attachments=attachments, progress=progress, help_requests=help_requests, statuses=statuses)
 
 @bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/submit', methods=('POST',))
 def submit_assignment(classroom_id, assignment_id):
@@ -127,17 +138,19 @@ def submit_assignment(classroom_id, assignment_id):
             parts = urlparse(url)
             if parts.scheme not in ('http', 'https') or not parts.hostname: 
                 raise ValueError("Invalid URL: " + url)
-        if len(urls) > app.config['MAX_LINKS']:
-            raise ValueError(f"Link attachment limit exceeded. You can attach a maximum of {app.config['MAX_LINKS']} links.")
-        
         if files:
            check_files(files)
 
         existing_submission = Submission.get_by_student_and_assignment(g.user, assignment)
-        existing_attachments = 0
-        if existing_submission:
-            existing_attachments = len(existing_submission.get_attachments())
-        if not files and not urls and existing_attachments == 0:
+        existing_attachments = existing_submission.get_attachments() if existing_submission else []
+        existing_files = len([i for i in existing_attachments if isinstance(i, FileAttachment)])
+        existing_links = len(existing_attachments) - existing_files
+        
+        if existing_links + len(urls) > app.config['MAX_LINKS']:
+            raise ValueError(f"Total link attachment limit exceeded. You can attach a maximum of {app.config['MAX_LINKS']} links. You currently have {existing_links} link(s) attached to this assignment.")
+        if existing_files + len(files) > app.config['MAX_FILES']:
+            raise ValueError(f"Total file attachment limit exceeded. You can attach a maximum of {app.config['MAX_FILES']} files. You currently have {existing_files} file(s) attached to this assignment. Please remove some files or compress them into a single zip file if you need to upload many files.")
+        if not files and not urls and not existing_attachments:
             raise ValueError("You must attach at least one file or link to submit the assignment.")
 
         submission = Submission.submit(assignment, g.user)
@@ -145,13 +158,13 @@ def submit_assignment(classroom_id, assignment_id):
             uploaded_files = upload_files(files)
             for filename, stored_filename, mime_type, file_size_kb in uploaded_files:
                 try:
-                    FileAttachment.create(submission.id, UploadArea.SUBMISSIONS, g.user.id, stored_filename, filename, mime_type, file_size_kb)
+                    submission.attach_file(g.user.id, stored_filename, filename, mime_type, file_size_kb)
                 except Exception as e:
                     _delete_file(stored_filename)
                     submission.unsubmit()
                     raise ValueError(f"Error occurred while creating file attachments: {e}")
         for url in urls:
-            LinkAttachment.create(submission.id, UploadArea.SUBMISSIONS, g.user.id, url, urlparse(url).hostname or url)
+            submission.attach_link(g.user.id, url, urlparse(url).hostname or url)
         flash('Assignment submitted successfully.')
     except ValueError as ve:
         flash(str(ve))
@@ -181,7 +194,7 @@ def update_progress(classroom_id, assignment_id):
         notes = request.form.get('notes', '')
         hours_to_add = request.form.get('hours_to_add', type=float)
 
-        if new_status not in (ProgressStatus.NOT_STARTED, ProgressStatus.IN_PROGRESS):
+        if new_status not in (ProgressStatus.NOT_STARTED, ProgressStatus.IN_PROGRESS, progress.status):
             raise ValueError("Invalid status.")
         if progress.status == ProgressStatus.COMPLETED:
             raise ValueError("Unsubmit the assignment before changing its progress.")
@@ -206,39 +219,6 @@ def request_help(classroom_id, assignment_id):
         is_urgent = 'is_urgent' in request.form
         HelpRequest.create(g.user, assignment, message, is_urgent)
         flash('Help request sent successfully.')
-    except ValueError as ve:
-        flash(str(ve))
-
-    return redirect(url_for('student.assignment', classroom_id=classroom_id, assignment_id=assignment_id))
-
-@bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/download_attachment/<int:attachment_id>', methods=('GET',))
-def download_attachment(classroom_id, assignment_id, attachment_id):
-    assignment, _ = _check_assignment(assignment_id, classroom_id)
-    try:
-        attachment = Attachment.get_by_id(attachment_id)
-        submission = Submission.get_by_student_and_assignment(g.user, assignment)
-        if not attachment or not submission or attachment.submission_id != submission.id:
-            raise ValueError("Attachment not found for this assignment.")
-        if isinstance(attachment, FileAttachment):
-            return send_from_directory(app.config['UPLOAD_PATH'], attachment.stored_filename, as_attachment=True, download_name=attachment.original_filename)
-        else:
-            raise ValueError("Only file attachments can be downloaded.")
-    except ValueError as ve:
-        flash(str(ve))
-        return redirect(url_for('student.assignment', classroom_id=classroom_id, assignment_id=assignment_id))
-
-@bp.route('/classroom/<int:classroom_id>/assignment/<int:assignment_id>/delete_attachment/<int:attachment_id>', methods=('POST',))
-def delete_attachment(classroom_id, assignment_id, attachment_id):
-    assignment, _ = _check_assignment(assignment_id, classroom_id)
-    try:
-        attachment = Attachment.get_by_id(attachment_id)
-        submission = Submission.get_by_student_and_assignment(g.user, assignment)
-        if not attachment or not submission or attachment.submission_id != submission.id:
-            raise ValueError("Attachment not found for this assignment.")
-        if submission.is_submitted:
-            raise ValueError("Cannot delete attachments from a submitted assignment. Please unsubmit first.")
-        remove_attachment(attachment)
-        flash('Attachment deleted successfully.')
     except ValueError as ve:
         flash(str(ve))
 

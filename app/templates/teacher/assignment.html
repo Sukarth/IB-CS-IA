@@ -116,7 +116,7 @@
 <!-- Show assignment submissions -->
 <h4>Submissions</h4>
 <ul>
-    {% for submission, student in submissions_students if submission %}
+    {% for submission, student in submissions_students if submission and submission.is_submitted %}
     <li>
         <a href="{{ url_for('teacher.submission', submission_id=submission.id) }}">Submitted by {{
             student.name }} at {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</a>

@@ -31,12 +31,14 @@
 <h4>Attachments</h4>
 {{ attachment_list(attachments) }}
 
-<!-- allow giving feedback -->
-<form method="post" action="{{ url_for('teacher.give_feedback', submission_id=submission.id) }}">
-    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-    <label for="feedback">Provide feedback:</label>
-    <textarea id="feedback" name="feedback">{{ submission.feedback or '' }}</textarea>
-    <br><br>
-    <button type="submit">Submit Feedback</button>
-</form>
+{% if submitted %}
+    <!-- allow giving feedback -->
+    <form method="post" action="{{ url_for('teacher.give_feedback', submission_id=submission.id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="feedback">Provide feedback:</label>
+        <textarea id="feedback" name="feedback">{{ submission.feedback or '' }}</textarea>
+        <br><br>
+        <button type="submit">Submit Feedback</button>
+    </form>
+{% endif %}
 {% endblock %}

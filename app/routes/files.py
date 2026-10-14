@@ -1,8 +1,5 @@
-from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, abort, send_from_directory, current_app as app
-from app.models.user import User
-import secrets
+from flask import Blueprint, flash, g, redirect, url_for, abort, send_from_directory, current_app as app
 from app.models.file_attachment import FileAttachment
-from app.models.link_attachment import LinkAttachment
 from app.models.attachment import Attachment
 from app.models.enums import UserRole
 from app.models.classroom import Classroom

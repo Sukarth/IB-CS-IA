@@ -8,7 +8,8 @@ class PriorityQueue:
 
     def enqueue(self, item: Any, priority: float):
         """Add an element to the queue based on its priority."""
-        return self._list.insert_in_order(PriorityNode(item, priority))
+        self._list.insert_in_order(PriorityNode(item, priority))
+        return self
 
     def dequeue(self):
         """Remove and return the highest priority element from the queue."""

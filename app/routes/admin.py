@@ -116,7 +116,7 @@ def remove_student_from_year_group(year_group_id):
 @bp.route('/activation_keys')
 def activation_keys():
     key_count = ActivationKey.get_count()
-    return render_template('admin/activation_keys.html', key_count=key_count, new_keys=session.pop('new_keys', []), max_count=app.config['MAX_KEYS_PER_GENERATION'], year_groups=YearGroup.get_all(), keys=ActivationKey.get_all())
+    return render_template('admin/activation_keys.html', key_count=key_count, new_keys=session.pop('new_keys', []), max_count=app.config['MAX_KEYS_PER_GENERATION'], max_validity=app.config['MAX_KEY_VALIDITY_DAYS'], year_groups=YearGroup.get_all(), keys=ActivationKey.get_all())
 
 @bp.route('/activation_keys/generate', methods=('POST',))
 def generate_activation_keys():
@@ -134,6 +134,9 @@ def generate_activation_keys():
 
         if not 1 <= count <= app.config['MAX_KEYS_PER_GENERATION']:
             raise ValueError(f"You can only generate 1-{app.config['MAX_KEYS_PER_GENERATION']} activation keys at once.")
+
+        if not 1 <= valid_days <= app.config['MAX_KEY_VALIDITY_DAYS']:
+            raise ValueError(f"Key validity must be between 1 and {app.config['MAX_KEY_VALIDITY_DAYS']} days.")
 
         if role == UserRole.STUDENT:
             year_group = YearGroup.get_by_id(year_group_id)

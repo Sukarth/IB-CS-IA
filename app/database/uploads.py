@@ -4,7 +4,6 @@ import filetype
 import mimetypes
 from werkzeug.utils import secure_filename
 from flask import current_app as app
-from app.database import execute, query_one
 from math import ceil
 from app.models.enums import AttachmentType
 from pathlib import Path
@@ -29,7 +28,7 @@ def check_files(files):
         file.stream.seek(0)
 
     if total_size > app.config['MAX_CONTENT_LENGTH']:
-        raise ValueError(f"Total file(s) size exceeds the maximum limit of {app.config['MAX_CONTENT_LENGTH'] / (1024 * 1024)} MB.")
+        raise ValueError(f"Total file(s) size exceeds the maximum limit of {app.config['MAX_CONTENT_LENGTH'] // (1024 * 1024)} MB.")
     
     for file in files:
         if file.filename == '':

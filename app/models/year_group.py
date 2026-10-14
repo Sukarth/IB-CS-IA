@@ -1,7 +1,5 @@
 from app.database import execute, query, query_one
-from datetime import datetime
 from .enums import UserRole
-from .user import User
 from .student import Student
 
 class YearGroup:
@@ -11,6 +9,7 @@ class YearGroup:
 
     @classmethod
     def create(cls, name: str):
+        name = name.strip()
         if not name:
             raise ValueError("Year group name cannot be blank!")
         if query_one("SELECT * FROM YEAR_GROUPS WHERE name = ?", (name,)):
@@ -20,6 +19,7 @@ class YearGroup:
         return cls.get_by_id(year_group_id)
 
     def rename(self, new_name: str):
+        new_name = new_name.strip()
         if not new_name:
             raise ValueError("Year group name cannot be blank!")
         if query_one("SELECT * FROM YEAR_GROUPS WHERE name = ? AND id != ?", (new_name, self.id)):
@@ -36,6 +36,8 @@ class YearGroup:
     def add_student(self, student: Student):
         if student.role != UserRole.STUDENT:
             raise ValueError("Only students can be added to a year group!")
+        if student.year_group_id == self.id:
+            raise ValueError("Student is already in this year group!")
         execute("UPDATE USERS SET year_group_id = ? WHERE id = ?", (self.id, student.id))
         student.year_group_id = self.id
         return self
@@ -58,7 +60,7 @@ class YearGroup:
         return students
     
     def delete(self):
-        if query_one("SELECT * FROM USERS WHERE year_group_id = ?", (self.id,)):
+        if self.get_students():
             raise ValueError("Cannot delete a year group that has student(s) assigned to it!")
         execute("DELETE FROM YEAR_GROUPS WHERE id = ?", (self.id,))
         return True

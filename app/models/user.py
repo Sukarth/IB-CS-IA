@@ -44,6 +44,7 @@ class User(ABC):
 
     @classmethod
     def register(cls, name: str, email: str, password: str, activation_key: str):
+        name = name.strip()
         if not name:
             raise ValueError('Name cannot be blank!')
         if not email:
@@ -56,7 +57,7 @@ class User(ABC):
         if not activation_key:
             raise ValueError('Activation key cannot be blank!')
         
-        if query_one("SELECT * FROM USERS WHERE email = ?", (email,)):
+        if cls.get_by_email(email):
             raise ValueError("Email is already in use!")
         activation = ActivationKey.validate(activation_key)
         if not activation:
@@ -113,11 +114,11 @@ class User(ABC):
 
     @classmethod
     def authenticate(cls, email: str, password: str):
+        email = email.strip().lower()
         if not email:
             raise ValueError('Email cannot be blank!')
         if not password:
             raise ValueError('Password cannot be blank!')
-        email = email.strip().lower()
         if not cls._validate_email(email):
             raise ValueError('Invalid email address!')
         user = cls.get_by_email(email)
@@ -131,14 +132,17 @@ class User(ABC):
         return user
 
     def update_profile(self, name: str, email: str):
+        name = name.strip()
+        email = email.strip().lower()
         if not email:
             raise ValueError('Email is required!')
-        email = email.strip().lower()
         if not name:
             raise ValueError('Name is required!')
         if not self._validate_email(email):
             raise ValueError('Invalid email address!')
-        if query_one("SELECT * FROM USERS WHERE email = ? AND id != ?", (email, self.id)):
+        
+        existing_user = self.get_by_email(email)
+        if existing_user and existing_user.id != self.id:
             raise ValueError('Email is already in use!')
 
         execute("UPDATE USERS SET name = ?, email = ? WHERE id = ?", (name, email, self.id))

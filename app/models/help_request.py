@@ -33,13 +33,20 @@ class HelpRequest:
     def create(cls, student: Student, assignment: Assignment, message: str, is_urgent: bool):
         if not student or student.role != UserRole.STUDENT:
             raise ValueError("Only students can create help requests!")
+
+        message = message.strip()
+        if not message:
+            raise ValueError("Help request message cannot be empty.")
         
-        if not query_one("SELECT * FROM ASSIGNMENTS WHERE id = ?", (assignment.id,)):
+        if not assignment or not Assignment.get_by_id(assignment.id):
             raise ValueError("Assignment does not exist.")
 
         classroom = Classroom.get_by_id(assignment.classroom_id)
         if not classroom:
             raise ValueError("Classroom does not exist.")
+        
+        if student.id not in [s.id for s in classroom.get_students()]:
+            raise ValueError("Cannot create a help request for a student who is not enrolled in the classroom containing the assignment.")
 
         if not classroom.is_published:
             raise ValueError("Cannot create a help request for an unpublished classroom.")
@@ -64,11 +71,16 @@ class HelpRequest:
         return [cls._from_row(row) for row in rows]
 
     def resolve(self, resolved_by_id: int, resolution_notes: str):
+        resolution_notes = resolution_notes.strip()
         if self.resolved_at is not None:
             raise ValueError("Help request is already resolved.")
+        assignment = Assignment.get_by_id(self.assignment_id)
+        if resolved_by_id != Classroom.get_by_id(assignment.classroom_id).teacher_id:
+            raise ValueError("Only the teacher of the classroom can resolve this help request.")
+        
         execute("UPDATE HELP_REQUESTS SET resolved_by_id = ?, resolution_notes = ?, resolved_at = ? WHERE id = ?", (resolved_by_id, resolution_notes, datetime.now().isoformat(), self.id))
         student = Student.get_by_id(self.student_id)
-        assignment = Assignment.get_by_id(self.assignment_id)
+        
         prog = ProgressRecord.get_or_create(student, assignment)
         if prog.status == ProgressStatus.NEEDS_HELP:
             prog.set_status(ProgressStatus.IN_PROGRESS)

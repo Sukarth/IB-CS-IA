@@ -1,4 +1,4 @@
-from flask import Blueprint, g, redirect, render_template, url_for
+from flask import Blueprint, g, redirect, url_for
 from app.models.enums import UserRole
 
 bp = Blueprint('main', __name__)

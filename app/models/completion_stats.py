@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from app.database import execute, query, query_one
+from app.database import query, query_one
 from datetime import datetime
 from .student import Student
 from .enums import ProgressStatus
@@ -32,7 +32,7 @@ class CompletionStats:
         pending_students_rows = query("SELECT * FROM USERS WHERE USERS.id NOT IN (SELECT DISTINCT student_id FROM PROGRESS_RECORDS WHERE assignment_id = ? AND status = ?) AND USERS.id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, ProgressStatus.COMPLETED.value, assignment.classroom_id))
         pending_students = [Student._from_row(row) for row in pending_students_rows]
         
-        row = query_one("SELECT MIN(submitted_at) AS first, MAX(submitted_at) AS last FROM SUBMISSIONS WHERE assignment_id = ? AND student_id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, assignment.classroom_id))
+        row = query_one("SELECT MIN(submitted_at) AS first, MAX(submitted_at) AS last FROM SUBMISSIONS WHERE assignment_id = ? AND is_submitted = ? AND student_id IN (SELECT student_id FROM ENROLLMENTS WHERE classroom_id = ?)", (assignment.id, True, assignment.classroom_id))
         first_submission_at = datetime.fromisoformat(row['first']) if row['first'] else None
         last_submission_at = datetime.fromisoformat(row['last']) if row['last'] else None
         

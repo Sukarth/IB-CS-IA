@@ -57,13 +57,13 @@ class Classroom:
         return self
 
     def delete(self):
-        if query_one("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ?", (self.id,)):
+        if self.get_assignments():
             raise ValueError("Cannot delete a classroom with assignments. Please remove assignments first.")
-        if query_one("SELECT * FROM MATERIALS WHERE classroom_id = ?", (self.id,)):
+        if self.get_materials():
             raise ValueError("Cannot delete a classroom with materials. Please remove materials first.")
-        if query_one("SELECT * FROM ENROLLMENTS WHERE classroom_id = ?", (self.id,)):
+        if self.get_students():
             raise ValueError("Cannot delete a classroom with enrolled students. Please unenroll students first.")
-        if query_one("SELECT * FROM HELP_REQUESTS INNER JOIN ASSIGNMENTS ON HELP_REQUESTS.assignment_id = ASSIGNMENTS.id WHERE ASSIGNMENTS.classroom_id = ?", (self.id,)):
+        if self.get_help_requests(unresolved_only=False):
             raise ValueError("Cannot delete a classroom with help requests. Please resolve or remove help requests first.")
         execute("DELETE FROM CLASSROOMS WHERE id = ?", (self.id,))
         return True
@@ -85,8 +85,10 @@ class Classroom:
     def enroll_student(self, student: Student):
         if not student.role == UserRole.STUDENT:
             raise ValueError("Only students can be enrolled in classrooms!")
-        if query_one("SELECT * FROM ENROLLMENTS WHERE classroom_id = ? AND student_id = ?", (self.id, student.id)):
+        if student.id in [s.id for s in self.get_students()]:
             raise ValueError("Student is already enrolled in this classroom!")
+        if not student.is_active:
+            raise ValueError("Cannot enroll a deactivated student to a classroom!")
 
         execute("INSERT INTO ENROLLMENTS (classroom_id, student_id, joined_at) VALUES (?, ?, ?)", (self.id, student.id, datetime.now().isoformat()))
         return self
@@ -94,7 +96,7 @@ class Classroom:
     def unenroll_student(self, student: Student):
         if not student.role == UserRole.STUDENT:
             raise ValueError("Only students can be unenrolled from classrooms!")
-        if not query_one("SELECT * FROM ENROLLMENTS WHERE classroom_id = ? AND student_id = ?", (self.id, student.id)):
+        if student.id not in [s.id for s in self.get_students()]:
             raise ValueError("Student is not enrolled in this classroom!")
 
         execute("DELETE FROM ENROLLMENTS WHERE classroom_id = ? AND student_id = ?", (self.id, student.id))

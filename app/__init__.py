@@ -10,6 +10,7 @@ def create_app(test_config=None):
     app.config['MAX_FILES'] = 5
     app.config['MAX_LINKS'] = 10
     app.config['UPLOAD_PATH'] = os.path.join(app.instance_path, 'uploads')
+    app.config['MAX_KEY_VALIDITY_DAYS'] = 365
     app.config['MAX_KEYS_PER_GENERATION'] = 100
 
 

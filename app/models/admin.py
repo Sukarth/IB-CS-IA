@@ -1,7 +1,7 @@
 from datetime import datetime
 from .user import User
 from .enums import UserRole
-from app.database import execute, query, query_one
+from app.database import query
 
 class Admin(User):
     def get_classrooms(self):

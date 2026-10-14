@@ -1,4 +1,4 @@
-from app.database import execute, query, query_one
+from app.database import execute, query_one
 from abc import ABC, abstractmethod
 from datetime import datetime
 from .enums import AttachmentType
@@ -14,11 +14,14 @@ class Attachment(ABC):
 
     @classmethod
     def _insert(cls, uploaded_by_id: int, **extra):
+        from .user import User
         if cls.TYPE is None:
             raise TypeError("Attachment is abstract. Use a subclass!")
         if not uploaded_by_id:
             raise ValueError("Uploaded by ID cannot be blank!")
-
+        if not User.get_by_id(uploaded_by_id):
+            raise ValueError("Uploading user does not exist!")
+        
         columns = ['uploaded_by_id', 'kind', 'uploaded_at'] + list(extra)
         values = [uploaded_by_id, cls.TYPE.value, datetime.now().isoformat()] + list(extra.values())
         placeholders = ', '.join('?' for _ in columns)

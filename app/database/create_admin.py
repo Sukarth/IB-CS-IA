@@ -1,4 +1,4 @@
-from app.database import init_db, query_one, execute
+from app.database import init_db, execute
 from app.models.enums import UserRole
 from app.models.user import User
 from datetime import datetime
@@ -8,21 +8,23 @@ import sys
 def create_admin():
     init_db()
     
-    if query_one("SELECT * FROM USERS WHERE role = ?", (UserRole.ADMIN.value,)):
+    if User.get_all(UserRole.ADMIN):
         print("Admin user already exists!")
         sys.exit(1)
     
-    name = input("Enter admin name: ")
+    name = input("Enter admin name: ").strip()
+    while not name:
+        name = input("Name cannot be blank. Enter admin name: ").strip()
     
     while True:
         email = input("Enter admin email: ").strip().lower()
         if User._validate_email(email):
-            if not query_one("SELECT * FROM USERS WHERE email = ?", (email,)):
+            if not User.get_by_email(email):
                 break
             else:
                 print("Email is already in use. Please try again.")
-            
-        print("Invalid email. Please try again.")
+        else:
+            print("Invalid email. Please try again.")
         
         
     

@@ -2,7 +2,6 @@ from app.database import execute, query, query_one
 from .enums import AssignmentType
 from .completion_stats import CompletionStats
 from datetime import datetime
-from .work_chunk import WorkChunk
 from abc import ABC, abstractmethod
 import math
 
@@ -21,12 +20,13 @@ class Assignment(ABC):
 
     @classmethod
     def _insert(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, **extra):
+        from .classroom import Classroom
         title = title.strip()
         if cls.TYPE is None:
             raise TypeError("Assignment is abstract. Use a subclass!")
         if not classroom_id:
             raise ValueError("Classroom ID cannot be blank!")
-        if not query_one("SELECT * FROM CLASSROOMS WHERE id = ?", (classroom_id,)):
+        if not Classroom.get_by_id(classroom_id):
             raise ValueError("Classroom does not exist!")
         if not title:
             raise ValueError("Assignment title cannot be blank!")
@@ -117,9 +117,10 @@ class Assignment(ABC):
         return self
 
     def delete(self):
+        from .help_request import HelpRequest
         if query_one("SELECT * FROM SUBMISSIONS WHERE assignment_id = ?", (self.id,)):
             raise ValueError("Cannot delete an assignment that has submissions!")
-        if query_one("SELECT * FROM HELP_REQUESTS WHERE assignment_id = ?", (self.id,)):
+        if HelpRequest.get_for_assignment(self.id):
             raise ValueError("Cannot delete an assignment that has help requests!")
 
         execute("DELETE FROM ASSIGNMENTS WHERE id = ?", (self.id,))

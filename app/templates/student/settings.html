@@ -15,7 +15,7 @@
     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
     
     <label for="procrastination_factor">Procrastination Factor:</label>
-    <input type="number" min="0" step="0.01" id="procrastination_factor" name="procrastination_factor" value="{{ form.procrastination_factor }}" required>
+    <input type="number" min="0.01" step="0.01" id="procrastination_factor" name="procrastination_factor" value="{{ form.procrastination_factor }}" required>
     <br><br>
     <input type="checkbox" id="exclude_overdue" name="exclude_overdue" {% if form.exclude_overdue %} checked {% endif %}>
     <label for="exclude_overdue">Exclude Overdue Tasks</label>

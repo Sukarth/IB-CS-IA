@@ -9,32 +9,33 @@
 
 {% block content %}
 
-<!-- Go to next help request in queue for the same assignment -->
-<a href="{{ url_for('teacher.help_request', help_request_id=help_request.id) }}">
-    Open Next Help Request {{ icon('right_chevron') }}
-</a>
+{% if next_request %}
+    <a href="{{ url_for('teacher.help_request', help_request_id=next_request.id) }}">
+        Open Next Help Request in queue {{ icon('right_chevron') }}
+    </a>
+{% endif %}
 
 <!-- Show the help request details -->
 <p>{% if help_request.is_urgent %}<strong>Urgent</strong> help {% else %}Help {% endif %}requested by {{ student.name }} at {{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-<label for="help_request">Message:</label>
-<p name="help_request">{{ help_request.message }}</p>
+<p>Message:<br><br>{{ help_request.message }}</p>
 {% if help_request.resolved_at %}
     <p>Resolved at {{ help_request.resolved_at.strftime('%Y-%m-%d %H:%M') }}</p>
 {% else %}
     <p>Help request not yet resolved.</p>
 {% endif %}
 {% if help_request.resolution_notes %}
-    <label for="resolution_notes">Resolution Notes:</label>
-    <p name="resolution_notes">{{ help_request.resolution_notes }}</p>
+    <p>Resolution Notes:<br><br>{{ help_request.resolution_notes }}</p>
 {% endif %}
 
-<!-- Allow giving feedback -->
-<form method="post"
-    action="{{ url_for('teacher.resolve_help_request', help_request_id=help_request.id) }}">
-    <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-    <label for="resolution_notes">Provide resolution notes for the help request:</label>
-    <textarea id="resolution_notes" name="resolution_notes">{{ help_request.resolution_notes or '' }}</textarea>
-    <br><br>
-    <button type="submit">Submit Notes</button>
-</form>
+{% if not help_request.resolved_at %}
+    <!-- Allow resolving the help request -->
+    <form method="post"
+        action="{{ url_for('teacher.resolve_help_request', help_request_id=help_request.id) }}">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+        <label for="resolution_notes">Provide resolution notes for the help request:</label>
+        <textarea id="resolution_notes" name="resolution_notes">{{ help_request.resolution_notes or '' }}</textarea>
+        <br><br>
+        <button type="submit">Submit Notes</button>
+    </form>
+{% endif %}
 {% endblock %}

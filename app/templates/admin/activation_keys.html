@@ -50,7 +50,7 @@
         </select>
         <br><br>
         <label for="validity">Validity in days:</label>
-        <input type="number" id="validity" name="validity" min="1" value="1" required>
+        <input type="number" id="validity" name="validity" min="1" value="1" max="{{ max_validity }}" required>
         <br><br>
         <label for="year_group_id">Year group to assign:</label>
         <select id="year_group_id" name="year_group_id" required>

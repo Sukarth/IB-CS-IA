@@ -22,6 +22,22 @@
     {{ assignment_type_info(assignment) }}
 </div>
 
+<h3>Your help request(s)</h3>
+<ul>
+    {% for help_request in help_requests %}
+        <li>
+            Help request: "{{ help_request.message }}" | Requested at: {{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}
+            {% if help_request.resolved_at %}
+             | Teacher's response: {{ help_request.resolution_notes or 'No response provided' }}
+            {% else %}
+             | Teacher hasn't responded yet.
+            {% endif %}
+        </li>
+    {% else %}
+        <li>You haven't asked for help on this assignment.</li>
+    {% endfor %}
+</ul>
+
 <!-- Request Help -->
 <div>
     <h3>Request Help</h3>
@@ -47,10 +63,10 @@
     <p>Attach {% if attachments %}additional links or files to{% else %}a link or a file to submit{% endif %} this assignment.</p>
     <form method="post" action="{{ url_for('student.submit_assignment', classroom_id=classroom.id, assignment_id=assignment.id) }}" enctype="multipart/form-data">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-        <label for="link">Enter link(s) to submit:</label>
+        <label for="links">Enter link(s) to submit:</label>
             <textarea id="links" name="links" placeholder="Enter one link per line"></textarea>
         <br><br>
-        <label for="file">Choose file(s) to submit:</label>
+        <label for="files">Choose file(s) to submit:</label>
         <input type="file" id="files" name="files" multiple>
         <br><br>
         <button type="submit">Submit Assignment</button>

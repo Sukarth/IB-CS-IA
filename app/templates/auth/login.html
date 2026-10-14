@@ -1,17 +1,22 @@
 {% extends "base.html" %}
 {% block title %}Login{% endblock %}
 {% block body %}
+<center>
     <h1>Login to Study Tracker</h1>
     <p>Track your study sessions and progress with ease.</p>
-    
+    <br>
     <form method="post" action="{{ url_for('auth.login') }}">
         <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
 
         <label for="email">Email:</label>
         <input type="email" id="email" name="email" value="{{ request.form.get('email', '') }}" required>
+        <br><br>
         <label for="password">Password:</label>
         <input type="password" id="password" name="password" required>
-        
+        <br><br>
         <button type="submit">Login</button>
     </form>
+    <br>
+    <p>Don't have an account? <a href="{{ url_for('auth.register') }}">Register here</a>.</p>
+</center>
 {% endblock %}

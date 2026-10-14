@@ -2,7 +2,6 @@ from .assignment import Assignment
 from .enums import AssignmentType
 from .work_chunk import WorkChunk
 from datetime import datetime
-from app.database import execute, query, query_one
 
 class Project(Assignment):
     TYPE = AssignmentType.PROJECT
@@ -14,8 +13,8 @@ class Project(Assignment):
 
     @classmethod
     def create(cls, classroom_id: int, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, is_published: bool, min_group_size: int, max_group_size: int):
-        if min_group_size < 0:
-            raise ValueError("Minimum group size cannot be smaller than zero!")
+        if min_group_size < 1:
+            raise ValueError("Minimum group size cannot be smaller than one!")
         if max_group_size < 1:
             raise ValueError("Maximum group size cannot be smaller than one!")
         if max_group_size < min_group_size:
@@ -28,8 +27,8 @@ class Project(Assignment):
         return cls(row['id'], row['classroom_id'], row['title'], row['description'], datetime.fromisoformat(row['deadline']), row['effort_hours'], row['difficulty'], bool(row['is_published']), row['min_group_size'], row['max_group_size'])
 
     def update(self, title: str, description: str, deadline: datetime, effort_hours: float, difficulty: int, min_group_size: int, max_group_size: int):
-        if min_group_size < 0:
-            raise ValueError("Minimum group size cannot be smaller than zero!")
+        if min_group_size < 1:
+            raise ValueError("Minimum group size cannot be smaller than one!")
         if max_group_size < 1:
             raise ValueError("Maximum group size cannot be smaller than one!")
         if max_group_size < min_group_size:

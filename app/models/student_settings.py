@@ -77,8 +77,8 @@ class StudentSettings:
     
     @staticmethod
     def _validate(procrastination_factor: float, exclude_overdue: bool, hours_free_monday: float, hours_free_tuesday: float, hours_free_wednesday: float, hours_free_thursday: float, hours_free_friday: float, hours_free_saturday: float, hours_free_sunday: float):
-        if procrastination_factor < 0:
-            raise ValueError("Procrastination factor must be non-negative.")
+        if procrastination_factor <= 0:
+            raise ValueError("Procrastination factor must be greater than 0.")
         if not isinstance(exclude_overdue, bool):
             raise ValueError("Exclude overdue must be True or False.")
         if not math.isfinite(procrastination_factor):

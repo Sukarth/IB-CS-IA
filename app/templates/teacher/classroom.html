@@ -29,7 +29,7 @@
     <ul>
         {% for student in students %}
             <li>
-                <a href="{{ url_for('teacher.student', student_id=student.id) }}">{{ student.name }} | ID: {{ student.id }}</a>
+                <a href="{{ url_for('teacher.student', student_id=student.id) }}">{{ student.name }} ({{ student.email }})</a>
             </li>
         {% endfor %}
     </ul>
@@ -38,9 +38,14 @@
 <!-- show the classroom's help requests -->
 <h3>Help Requests</h3>
 <ul>
-    {% for help_request in help_requests %}
+    {% for help_request, student, assignment in help_requests %}
         <li>
-            <a href="{{ url_for('teacher.help_request', help_request_id=help_request.id) }}">{{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}{% if help_request.is_urgent %} - <b>Urgent</b>{% endif %}</a>
+            <a href="{{ url_for('teacher.help_request', help_request_id=help_request.id) }}">
+                Help requested by {{ student.name }} for assignment {{ assignment.title }} on {{ help_request.created_at.strftime('%Y-%m-%d %H:%M') }}
+                {% if help_request.is_urgent %}
+                    - <b>Urgent</b>
+                {% endif %}
+            </a>
         </li>
     {% endfor %}
 </ul>
@@ -88,14 +93,28 @@
 <p>Manage the students in this classroom.</p>
 <form method="post" action="{{ url_for('teacher.enroll_student', classroom_id=classroom.id) }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-    <label for="student_id">Enroll a student by ID:</label>
-    <input type="text" id="enroll_student_id" name="student_id" required>
+    <label for="enroll_student_id">Enroll a student:</label>
+    <select id="enroll_student_id" name="enroll_student_id" required>
+        {% for student in available_students %}
+            <option value="{{ student.id }}">{{ student.name }} ({{ student.email }})</option>
+        {% else %}
+            <option value="" disabled>No students available to enroll.</option>
+        {% endfor %}
+    </select>
+    <br><br>
     <button type="submit">Enroll Student</button>
 </form>
 <form method="post" action="{{ url_for('teacher.unenroll_student', classroom_id=classroom.id) }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-    <label for="student_id">Unenroll a student by ID:</label>
-    <input type="text" id="unenroll_student_id" name="student_id" required>
+    <label for="unenroll_student_id">Unenroll a student:</label>
+    <select id="unenroll_student_id" name="unenroll_student_id" required>
+        {% for student in students %}
+            <option value="{{ student.id }}">{{ student.name }} ({{ student.email }})</option>
+        {% else %}
+            <option value="" disabled>No students available to unenroll.</option>
+        {% endfor %}
+    </select>
+    <br><br>
     <button type="submit">Unenroll Student</button>
 </form>
 
@@ -115,11 +134,11 @@
 <!-- allow editing the classroom details -->
 <form method="post" action="{{ url_for('teacher.edit_classroom', classroom_id=classroom.id) }}" style="display:inline;">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-    <label for="name">Classroom Name:</label>
-    <input type="text" id="classroom_name" name="name" value="{{ classroom.name }}" required>
+    <label for="classroom_name">Classroom Name:</label>
+    <input type="text" id="classroom_name" name="classroom_name" value="{{ classroom.name }}" required>
     <br><br>
-    <label for="description">Classroom Description:</label>
-    <textarea id="classroom_description" name="description" required>{{ classroom.description }}</textarea>
+    <label for="classroom_description">Classroom Description:</label>
+    <textarea id="classroom_description" name="classroom_description">{{ classroom.description }}</textarea>
     <br><br>
     <button type="submit">Save Changes</button>
 </form>
@@ -127,17 +146,17 @@
 <!-- Allow creating new materials -->
 <form method="post" action="{{ url_for('teacher.create_material', classroom_id=classroom.id) }}" enctype="multipart/form-data">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-    <label for="title">Title:</label>
-    <input type="text" id="material_title" name="title" required>
+    <label for="material_title">Title:</label>
+    <input type="text" id="material_title" name="material_title" required>
     <br><br>
-    <label for="description">Description:</label>
-    <textarea id="material_description" name="description"></textarea>
+    <label for="material_description">Description:</label>
+    <textarea id="material_description" name="material_description"></textarea>
     <br><br>
-    <label for="link">Add link(s) to material:</label>
-    <textarea id="material_links" name="links" placeholder="Enter one link per line"></textarea>
+    <label for="material_links">Add link(s) to material:</label>
+    <textarea id="material_links" name="material_links" placeholder="Enter one link per line"></textarea>
     <br><br>
-    <label for="file">Add file(s) to material:</label>
-    <input type="file" id="material_files" name="files" multiple>
+    <label for="material_files">Add file(s) to material:</label>
+    <input type="file" id="material_files" name="material_files" multiple>
     <br><br>
     <button type="submit">Create Material</button>
 </form>
@@ -145,20 +164,20 @@
 <!-- allow creating new assignments -->
 <form method="post" action="{{ url_for('teacher.create_assignment', classroom_id=classroom.id) }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
-    <label for="title">Title:</label>
-    <input type="text" id="assignment_title" name="title" required>
+    <label for="assignment_title">Title:</label>
+    <input type="text" id="assignment_title" name="assignment_title" required>
     <br><br>
-    <label for="description">Description:</label>
-    <textarea id="assignment_description" name="description"></textarea>
+    <label for="assignment_description">Description:</label>
+    <textarea id="assignment_description" name="assignment_description"></textarea>
     <br><br>
-    <label for="deadline">Deadline:</label>
-    <input type="datetime-local" id="assignment_deadline" name="deadline" required>
+    <label for="assignment_deadline">Deadline:</label>
+    <input type="datetime-local" id="assignment_deadline" name="assignment_deadline" required>
     <br><br>
-    <label for="effort_hours">Estimated Effort (in hours):</label>
-    <input type="number" id="assignment_effort_hours" name="effort_hours" value="2" min="0.1" step="0.1" required>
+    <label for="assignment_effort_hours">Estimated Effort (in hours):</label>
+    <input type="number" id="assignment_effort_hours" name="assignment_effort_hours" value="2" min="0.1" step="0.1" required>
     <br><br>
-    <label for="difficulty">Estimated Difficulty:</label>
-    <select id="assignment_difficulty" name="difficulty" required>
+    <label for="assignment_difficulty">Estimated Difficulty:</label>
+    <select id="assignment_difficulty" name="assignment_difficulty" required>
         {% for i in range(1, 6) %}
             <option value="{{ i }}" >{{ i }}</option>
         {% endfor %}
@@ -190,8 +209,8 @@
         <input type="number" id="max_group_size" name="max_group_size" value="4" min="1" required>
         <br><br>
     </div>
-    <label for="is_published">Publish upon creation:</label>
-    <input type="checkbox" id="assignment_is_published" name="is_published" required>
+    <label for="assignment_is_published">Publish upon creation:</label>
+    <input type="checkbox" id="assignment_is_published" name="assignment_is_published">
     <br><br>
 
     <button type="submit">Create Assignment</button>

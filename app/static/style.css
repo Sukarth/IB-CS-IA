@@ -25,7 +25,7 @@ a:has(svg):visited {
     color: inherit;
 }
 
-.custom_submit {
+.custom_submit, #menu_button {
     background-color: transparent;
     border: none;
     padding: 0;
@@ -33,6 +33,7 @@ a:has(svg):visited {
 
 #menu_button {
     z-index: 100;
+    padding-left: 0.5rem;
 }
 
 #nav {
@@ -48,9 +49,14 @@ a:has(svg):visited {
     gap: 1rem;
     background-color: white;
     padding: 6rem 1rem;
+    border-right: 1px solid black;
 }
 
 #nav.show {
     visibility: visible;
     transform: translateX(0);
+}
+
+.topbar {
+    border-bottom: 1px solid black;
 }

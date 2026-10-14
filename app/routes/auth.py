@@ -1,4 +1,5 @@
 from flask import Blueprint, flash, g, redirect, render_template, request, session, url_for, abort
+from app.security.decorators import check_login
 from app.models.user import User
 import secrets
 
@@ -10,7 +11,7 @@ def register():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
-        activation_key = request.form['activation_key']
+        activation_key = request.form['activation_key'].upper()
 
         try:
             User.register(name, email, password, activation_key)
@@ -42,6 +43,37 @@ def logout():
     session.clear()
     flash('You have been logged out.')
     return redirect(url_for('main.index'))
+
+@bp.route('/account', methods=('GET',))
+def account():
+    logged_in = check_login()
+    if logged_in:
+        return logged_in
+    return render_template('auth/account.html')
+
+@bp.route('/account/profile', methods=('POST',))
+def update_profile():
+    logged_in = check_login()
+    if logged_in:
+        return logged_in
+    try:
+        g.user.update_profile(request.form.get('name', ''), request.form.get('email', ''))
+        flash('Profile updated successfully.')
+    except ValueError as ve:
+        flash(str(ve))
+    return redirect(url_for('auth.account'))
+
+@bp.route('/account/password', methods=('POST',))
+def change_password():
+    logged_in = check_login()
+    if logged_in:
+        return logged_in
+    try:
+        g.user.change_password(request.form.get('current_password', ''), request.form.get('new_password', ''))
+        flash('Password changed successfully.')
+    except ValueError as ve:
+        flash(str(ve))
+    return redirect(url_for('auth.account'))
 
 @bp.before_app_request
 def load_logged_in_user():

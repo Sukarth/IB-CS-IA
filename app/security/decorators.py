@@ -1,5 +1,4 @@
 from flask import g, redirect, url_for, abort, flash
-from functools import wraps
 
 
 def check_login():
@@ -18,22 +17,3 @@ def check_role(role):
             abort(403)
         return None
     return guard
-
-
-def _as_decorator(guard):
-    """Turns a guard into a decorator."""
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            blocked = guard()
-            if blocked is not None:
-                return blocked
-            return func(*args, **kwargs)
-        return wrapper
-    return decorator
-
-
-login_required = _as_decorator(check_login) # better decorator naming
-
-def role_required(role): # better decorator naming
-    return _as_decorator(check_role(role))

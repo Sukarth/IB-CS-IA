@@ -1,7 +1,6 @@
 from .attachment import Attachment
 from .enums import AttachmentType
 from .enums import UploadArea
-from app.database import query_one, execute
 
 class FileAttachment(Attachment):
     TYPE = AttachmentType.FILE
@@ -15,6 +14,10 @@ class FileAttachment(Attachment):
 
     @classmethod
     def create(cls, uploaded_area_id: int, upload_area: UploadArea, uploaded_by_id: int, stored_filename: str, original_filename: str, mime_type: str, file_size_kb: int):
+        from .material import Material
+        from .submission import Submission
+        if not uploaded_by_id:
+            raise ValueError("Uploaded by ID cannot be blank!")
         if not stored_filename:
             raise ValueError("Stored filename cannot be blank!")
         if not original_filename:
@@ -25,11 +28,11 @@ class FileAttachment(Attachment):
             raise ValueError("File size must be greater than zero!")
 
         if upload_area == UploadArea.MATERIALS:
-            if not query_one("SELECT * FROM MATERIALS WHERE id = ?", (uploaded_area_id,)):
+            if not Material.get_by_id(uploaded_area_id):
                 raise ValueError("Material does not exist!")
             return cls._insert(uploaded_by_id, stored_filename=stored_filename, original_filename=original_filename, mime_type=mime_type, file_size_kb=file_size_kb, material_id=uploaded_area_id)
         elif upload_area == UploadArea.SUBMISSIONS:
-            if not query_one("SELECT * FROM SUBMISSIONS WHERE id = ?", (uploaded_area_id,)):
+            if not Submission.get_by_id(uploaded_area_id):
                 raise ValueError("Submission does not exist!")
             return cls._insert(uploaded_by_id, stored_filename=stored_filename, original_filename=original_filename, mime_type=mime_type, file_size_kb=file_size_kb, submission_id=uploaded_area_id)
         else:

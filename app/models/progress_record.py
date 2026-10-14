@@ -32,12 +32,16 @@ class ProgressRecord:
 
     @classmethod
     def get_or_create(cls, student: Student, assignment: Assignment):
+        from .classroom import Classroom
         if student.role != UserRole.STUDENT:
             raise ValueError("Only students can have progress records!")
         
         record = cls.get_progress(student, assignment)
         
         if record: return record
+
+        if student.id not in [s.id for s in Classroom.get_by_id(assignment.classroom_id).get_students()]:
+            raise ValueError("Cannot create a progress record for a student who is not enrolled in the classroom containing the assignment.")
         
         execute("INSERT INTO PROGRESS_RECORDS (student_id, assignment_id, status, status_changed_at) VALUES (?, ?, ?, ?)", (student.id, assignment.id, ProgressStatus.NOT_STARTED.value, datetime.now().isoformat()))
 

@@ -26,6 +26,8 @@ def execute(sql, params=()):
         cursor = connection.execute(sql, params)
         connection.commit()
         return cursor.lastrowid
+    except OverflowError:
+        raise ValueError("A number you entered is too large!")
     finally:
         connection.close()
 
@@ -33,6 +35,8 @@ def query(sql, params=()):
     connection = get_connection()
     try:
         return connection.execute(sql, params).fetchall()
+    except OverflowError:
+        return []
     finally:
         connection.close()
 
@@ -40,5 +44,7 @@ def query_one(sql, params=()):
     connection = get_connection()
     try:
         return connection.execute(sql, params).fetchone()
+    except OverflowError:
+        return None
     finally:
         connection.close()

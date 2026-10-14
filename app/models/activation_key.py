@@ -24,14 +24,18 @@ class ActivationKey:
     
     @classmethod
     def generate(cls, role_to_assign: UserRole, created_by: Admin, valid_days: int, year_group_id: int | None = None):
+        from .year_group import YearGroup
+        if not created_by or created_by.role != UserRole.ADMIN:
+            raise ValueError("Only admins can generate activation keys!")
         if valid_days <= 0:
             raise ValueError("Key validity must be greater than 0 days!")
         if not year_group_id and role_to_assign == UserRole.STUDENT:
             raise ValueError("Year group ID MUST be provided for creating a student activation key!")
         if year_group_id and role_to_assign != UserRole.STUDENT:
             raise ValueError("Year group ID can only be provided for student activation keys!")
+        if year_group_id and not YearGroup.get_by_id(year_group_id):
+            raise ValueError("Year group does not exist!")
         
-        # allow floats for valid_days?
         key = secrets.token_hex(4).upper()
         key_hash = hashlib.sha256(key.encode()).hexdigest()
         expires_at = (datetime.now() + timedelta(days=valid_days)).isoformat()

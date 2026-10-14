@@ -15,12 +15,9 @@ from app.models.completion_stats import CompletionStats
 from app.models.enums import ProgressStatus
 from app.models.user import User
 from app.models.file_attachment import FileAttachment
-from app.models.link_attachment import LinkAttachment
 from app.models.material import Material
-from app.models.attachment import Attachment
-from app.models.enums import UploadArea
 from app.algorithms.help_queue import build_help_queue
-from app.database.uploads import upload_files, check_files, _delete_file, remove_attachment
+from app.database.uploads import upload_files, check_files, _delete_file
 from urllib.parse import urlparse
 
 ASSIGNMENT_TYPES = {
@@ -35,17 +32,19 @@ bp.before_request(check_role(UserRole.TEACHER.value))
 
 @bp.route('/dashboard')
 def dashboard():
+    classrooms =  [classroom for classroom in g.user.get_classrooms()]
+    published_classrooms = [classroom for classroom in classrooms if classroom.is_published]
+    unpublished_classrooms = [classroom for classroom in classrooms if not classroom.is_published]
+    help_requests = []
+    
     try:
-        classrooms =  [classroom for classroom in g.user.get_classrooms()]
-        published_classrooms = [classroom for classroom in classrooms if classroom.is_published]
-        unpublished_classrooms = [classroom for classroom in classrooms if not classroom.is_published]
         pq = build_help_queue(g.user)
-        help_requests = []
         while not pq.is_empty():
-            help_requests.append(pq.dequeue())
+            help_req = pq.dequeue()
+            help_requests.append((help_req, User.get_by_id(help_req.student_id), Assignment.get_by_id(help_req.assignment_id)))
     except ValueError as ve:
         flash(str(ve))
-        return redirect(url_for('teacher.dashboard'))
+
     return render_template('teacher/dashboard.html', published_classrooms=published_classrooms, unpublished_classrooms=unpublished_classrooms, help_requests=help_requests)
 
 @bp.route('/')
@@ -59,13 +58,17 @@ def classroom(classroom_id):
     published_assignments = classroom.get_assignments(published_only=True)
     materials = classroom.get_materials()
     students = classroom.get_students()
-    help_requests = classroom.get_help_requests()
-    return render_template('teacher/classroom.html', classroom=classroom, unpublished_assignments=unpublished_assignments, published_assignments=published_assignments, materials=materials, students=students, help_requests=help_requests)
+    help_reqs = classroom.get_help_requests()
+    help_requests = [(help_req, User.get_by_id(help_req.student_id), Assignment.get_by_id(help_req.assignment_id)) for help_req in help_reqs]
+    enrolled_student_ids = {student.id for student in students}
+    available_students = [student for student in User.get_all(UserRole.STUDENT, activated=True) if student.id not in enrolled_student_ids]
+
+    return render_template('teacher/classroom.html', classroom=classroom, unpublished_assignments=unpublished_assignments, published_assignments=published_assignments, materials=materials, students=students, help_requests=help_requests, available_students=available_students)
 
 @bp.route('/classroom/create', methods=('POST',))
 def create_classroom():
-    name = request.form.get('name', '')
-    description = request.form.get('description', '')
+    name = request.form.get('classroom_name', '')
+    description = request.form.get('classroom_description', '')
     is_published = request.form.get('is_published') == 'on'
 
     try:
@@ -80,7 +83,7 @@ def create_classroom():
 @bp.route('/classroom/<int:classroom_id>/enroll', methods=('POST',))
 def enroll_student(classroom_id):
     classroom = _check_classroom(classroom_id)
-    student = User.get_by_id(request.form.get('student_id', type=int) or 0)
+    student = User.get_by_id(request.form.get('enroll_student_id', type=int) or 0)
     try:
         if not student or student.role != UserRole.STUDENT:
             raise ValueError("No student with that ID was found.")
@@ -95,7 +98,7 @@ def enroll_student(classroom_id):
 @bp.route('/classroom/<int:classroom_id>/unenroll', methods=('POST',))
 def unenroll_student(classroom_id):
     classroom = _check_classroom(classroom_id)
-    student = User.get_by_id(request.form.get('student_id', 0, type=int))
+    student = User.get_by_id(request.form.get('unenroll_student_id', 0, type=int))
     try:
         if not student or student.role != UserRole.STUDENT:
             raise ValueError("No student with that ID was found.")
@@ -133,8 +136,8 @@ def unpublish_classroom(classroom_id):
 @bp.route('/classroom/<int:classroom_id>/edit', methods=('POST',))
 def edit_classroom(classroom_id):
     classroom = _check_classroom(classroom_id)
-    name = request.form.get('name', '')
-    description = request.form.get('description', '')
+    name = request.form.get('classroom_name', '')
+    description = request.form.get('classroom_description', '')
 
     try:
         classroom.update(name, description)
@@ -206,10 +209,10 @@ def classroom_analytics(classroom_id):
 @bp.route('/classroom/<int:classroom_id>/material/create', methods=('POST',))
 def create_material(classroom_id):
     classroom = _check_classroom(classroom_id)
-    title = request.form.get('title', '')
-    description = request.form.get('description', '')
-    files = [f for f in request.files.getlist('files') if f.filename]
-    urls = [u.rstrip(',') for u in request.form.get('links', '').split() if u.rstrip(',')]
+    title = request.form.get('material_title', '')
+    description = request.form.get('material_description', '')
+    files = [f for f in request.files.getlist('material_files') if f.filename]
+    urls = [u.rstrip(',') for u in request.form.get('material_links', '').split() if u.rstrip(',')]
     
     try:
         for url in urls:
@@ -229,13 +232,13 @@ def create_material(classroom_id):
             
             for filename, stored_filename, mime_type, file_size_kb in uploaded_files:
                 try:
-                    FileAttachment.create(material.id, UploadArea.MATERIALS, g.user.id, stored_filename, filename, mime_type, file_size_kb)
+                    material.attach_file(g.user.id, stored_filename, filename, mime_type, file_size_kb)
                 except Exception as e:
                     _delete_file(stored_filename)
                     material.delete()
                     raise ValueError(f"Error occurred while creating file attachments: {e}")
         for url in urls:
-            LinkAttachment.create(material.id, UploadArea.MATERIALS, g.user.id, url, urlparse(url).hostname or url)
+            material.attach_link(g.user.id, url, urlparse(url).hostname or url)
         
         flash('Material created successfully.')
     except ValueError as ve:
@@ -247,18 +250,20 @@ def create_material(classroom_id):
 def create_assignment(classroom_id):
     classroom = _check_classroom(classroom_id)
     try:
-        title = request.form.get('title', '')
-        description = request.form.get('description', '')
-        deadline = datetime.fromisoformat(request.form.get('deadline', ''))
-        effort_hours = float(request.form.get('effort_hours', 0, type=float))
-        difficulty = int(request.form.get('difficulty', 0, type=int))
-        is_published = request.form.get('is_published') == 'on'
+        title = request.form.get('assignment_title', '')
+        description = request.form.get('assignment_description', '')
+        deadline = request.form.get('assignment_deadline', type=datetime.fromisoformat)
+        effort_hours = float(request.form.get('assignment_effort_hours', 0, type=float))
+        difficulty = int(request.form.get('assignment_difficulty', 0, type=int))
+        is_published = request.form.get('assignment_is_published') == 'on'
         type = request.form.get('type', 'GENERAL')
         if type not in ASSIGNMENT_TYPES:
             raise ValueError("Invalid assignment type.")
 
         assignment_type, fields = ASSIGNMENT_TYPES[type]
-        kwargs = {field: int(request.form[field]) for field in fields}
+        kwargs = {field: request.form.get(field, type=int) for field in fields}
+        if None in kwargs.values():
+            raise ValueError("Please enter a whole number in every field.")
         assignment_type.create(classroom.id, title, description, deadline, effort_hours, difficulty, is_published, **kwargs)
         flash('Assignment created successfully.')
     except ValueError as ve:
@@ -272,17 +277,18 @@ def assignment(assignment_id):
     completion_stats = CompletionStats.get_by_assignment(assignment)
     students = classroom.get_students()
     submissions = [Submission.get_by_student_and_assignment(student, assignment) for student in students]
-    help_requests_students = [(request, User.get_by_id(request.student_id)) for request in HelpRequest.get_for_assignment(assignment.id)]
+    help_requests_students = [(help_request, User.get_by_id(help_request.student_id)) for help_request in HelpRequest.get_for_assignment(assignment.id)]
     resolved_help_requests_students = [i for i in help_requests_students if i[0].resolved_at]
     unresolved_help_requests_students = [i for i in help_requests_students if not i[0].resolved_at]
     submissions_students = zip(submissions, students)
+    needs_help_count=len({student.id for _, student in unresolved_help_requests_students})
 
     status_counts = {status: 0 for status in ProgressStatus}
     for student in students:
         progress = ProgressRecord.get_progress(student, assignment)
         status_counts[progress.status if progress else ProgressStatus.NOT_STARTED] += 1
     
-    return render_template('teacher/assignment.html', assignment=assignment, resolved_help_requests_students=resolved_help_requests_students, unresolved_help_requests_students=unresolved_help_requests_students, submissions_students=submissions_students, completion_stats=completion_stats, progress_rows=_progress_rows(assignment, classroom, g.user), not_started_count=status_counts[ProgressStatus.NOT_STARTED], in_progress_count=status_counts[ProgressStatus.IN_PROGRESS], completed_count=status_counts[ProgressStatus.COMPLETED], needs_help_count=status_counts[ProgressStatus.NEEDS_HELP])
+    return render_template('teacher/assignment.html', assignment=assignment, resolved_help_requests_students=resolved_help_requests_students, unresolved_help_requests_students=unresolved_help_requests_students, submissions_students=submissions_students, completion_stats=completion_stats, progress_rows=_progress_rows(assignment, classroom, g.user), not_started_count=status_counts[ProgressStatus.NOT_STARTED], in_progress_count=status_counts[ProgressStatus.IN_PROGRESS], completed_count=status_counts[ProgressStatus.COMPLETED], needs_help_count=needs_help_count)
 
 @bp.route('/assignment/<int:assignment_id>/edit', methods=('POST',))
 def edit_assignment(assignment_id):
@@ -291,12 +297,14 @@ def edit_assignment(assignment_id):
     try:
         title = request.form.get('title', '')
         description = request.form.get('description', '')
-        deadline = datetime.fromisoformat(request.form.get('deadline', ''))
+        deadline = request.form.get('deadline', type=datetime.fromisoformat)
         effort_hours = float(request.form.get('effort_hours', 0, type=float))
         difficulty = int(request.form.get('difficulty', 0, type=int))
         is_published = request.form.get('is_published') == 'on'
 
-        kwargs = {field: int(request.form[field]) for field in ASSIGNMENT_TYPES[assignment.TYPE.value][1]}
+        kwargs = {field: request.form.get(field, type=int) for field in ASSIGNMENT_TYPES[assignment.TYPE.value][1]}
+        if None in kwargs.values():
+            raise ValueError("Please enter a whole number in every field.")
         assignment.update(title, description, deadline, effort_hours, difficulty, **kwargs)
 
         if is_published and not assignment.is_published:
@@ -327,7 +335,15 @@ def delete_assignment(assignment_id):
 def help_request(help_request_id):
     help_request, assignment, _ = _check_help_request(help_request_id)
     student = User.get_by_id(help_request.student_id)
-    return render_template('teacher/help_request.html', help_request=help_request, assignment=assignment, student=student)
+    
+    next_request = None
+    pq = build_help_queue(g.user)
+    while not pq.is_empty():
+        help_req = pq.dequeue()
+        if help_req.id != help_request.id:
+            next_request = help_req
+            break
+    return render_template('teacher/help_request.html', help_request=help_request, assignment=assignment, student=student, next_request=next_request)
 
 @bp.route('/help_request/<int:help_request_id>/resolve', methods=('POST',))
 def resolve_help_request(help_request_id):
@@ -365,23 +381,32 @@ def edit_material(material_id):
             parts = urlparse(url)
             if parts.scheme not in ('http', 'https') or not parts.hostname: 
                 raise ValueError("Invalid URL: " + url)
-        if len(urls) > app.config['MAX_LINKS']:
-            raise ValueError(f"Link attachment limit exceeded. You can attach a maximum of {app.config['MAX_LINKS']} links.")
+        if files:
+            check_files(files)
+
+        existing_attachments = material.get_attachments()
+        existing_files = len([i for i in existing_attachments if isinstance(i, FileAttachment)])
+        existing_links = len(existing_attachments) - existing_files
         
+        if existing_links + len(urls) > app.config['MAX_LINKS']:
+            raise ValueError(f"Total link attachment limit exceeded. You can attach a maximum of {app.config['MAX_LINKS']} links. You currently have {existing_links} link(s) attached to this material.")
+        if existing_files + len(files) > app.config['MAX_FILES']:
+            raise ValueError(f"Total file attachment limit exceeded. You can attach a maximum of {app.config['MAX_FILES']} files. You currently have {existing_files} file(s) attached to this material. Please remove some files or compress them into a single zip file if you need to upload many files.")
+
         material.update(title, description)
 
         if files:
-            check_files(files)
             uploaded_files = upload_files(files)
+
             for filename, stored_filename, mime_type, file_size_kb in uploaded_files:
                 try:
-                    FileAttachment.create(material.id, UploadArea.MATERIALS, g.user.id, stored_filename, filename, mime_type, file_size_kb)
+                    material.attach_file(g.user.id, stored_filename, filename, mime_type, file_size_kb)
                 except Exception as e:
                     _delete_file(stored_filename)
                     material.update(old_title, old_description)
                     raise ValueError(f"Error occurred while creating file attachments: {e}")
         for url in urls:
-            LinkAttachment.create(material.id, UploadArea.MATERIALS, g.user.id, url, urlparse(url).hostname or url)
+            material.attach_link(g.user.id, url, urlparse(url).hostname or url)
         
         flash('Material updated successfully.')
     except ValueError as ve:
@@ -421,13 +446,15 @@ def submission(submission_id):
 
 @bp.route('/submission/<int:submission_id>/give_feedback', methods=('POST',))
 def give_feedback(submission_id):
-    submission, assignment, classroom = _check_submission(submission_id)
+    submission, _, _ = _check_submission(submission_id)
+    try:
+        feedback = request.form.get('feedback', '').strip()
+        submission.add_feedback(feedback)
+        flash('Feedback added successfully.')
+    except ValueError as ve:
+        flash(str(ve))
 
-    feedback = request.form.get('feedback', '').strip()
-    submission.add_feedback(feedback)
-    flash('Feedback added successfully.')
-
-    return redirect(url_for('teacher.submission', classroom_id=classroom.id, assignment_id=assignment.id, submission_id=submission.id))
+    return redirect(url_for('teacher.submission', submission_id=submission.id))
 
 
 def _check_classroom(classroom_id):
@@ -437,7 +464,7 @@ def _check_classroom(classroom_id):
     return classroom
 
 def _progress_rows(assignment, classroom, teacher):
-    unresolved_requests = {(request.student_id, request.assignment_id): request for request in HelpRequest.get_unresolved_for_teacher(teacher.id)}
+    unresolved_requests = {(help_request.student_id, help_request.assignment_id): help_request for help_request in HelpRequest.get_unresolved_for_teacher(teacher.id)}
     rows = []
     for student in classroom.get_students():
         progress = ProgressRecord.get_progress(student, assignment)

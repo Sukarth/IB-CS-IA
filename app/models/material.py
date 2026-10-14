@@ -1,7 +1,4 @@
-from .assignment import Assignment
-from .enums import AssignmentType
 from .enums import UploadArea
-from .work_chunk import WorkChunk
 from datetime import datetime
 from app.database import execute, query, query_one
 
@@ -15,6 +12,8 @@ class Material:
 
     @classmethod
     def create(cls, title: str, description: str, classroom_id: int, uploaded_by_id: int):
+        from .classroom import Classroom
+        classroom = Classroom.get_by_id(classroom_id)
         title = title.strip()
         if not title:
             raise ValueError("Material title cannot be blank!")
@@ -22,8 +21,10 @@ class Material:
             raise ValueError("Classroom ID cannot be blank!")
         if not uploaded_by_id:
             raise ValueError("Uploaded by ID cannot be blank!")
-        if not query_one("SELECT * FROM CLASSROOMS WHERE id = ?", (classroom_id,)):
+        if not classroom:
             raise ValueError("Classroom does not exist!")
+        if uploaded_by_id != classroom.teacher_id:
+            raise ValueError("Only the teacher of the classroom can upload materials.")
 
         return cls.get_by_id(execute("INSERT INTO MATERIALS (title, description, classroom_id, uploaded_by_id, uploaded_at) VALUES (?, ?, ?, ?, ?)",
             (title, description, classroom_id, uploaded_by_id, datetime.now().isoformat())))
@@ -50,7 +51,7 @@ class Material:
         return self
 
     def delete(self):
-        if query_one("SELECT * FROM ATTACHMENTS WHERE material_id = ?", (self.id,)):
+        if self.get_attachments():
             raise ValueError("Cannot delete a material with attachments. Please remove attachments first.")
         execute("DELETE FROM MATERIALS WHERE id = ?", (self.id,))
         return True
@@ -61,10 +62,16 @@ class Material:
     
     def attach_file(self, uploaded_by_id: int, stored_filename: str, original_filename: str, mime_type: str, file_size_kb: int):
         from .file_attachment import FileAttachment
+
+        if uploaded_by_id != self.uploaded_by_id:
+            raise ValueError("Only the teacher who created the material can attach files to it.")
         
         return FileAttachment.create(self.id, UploadArea.MATERIALS, uploaded_by_id, stored_filename, original_filename, mime_type, file_size_kb)
     
     def attach_link(self, uploaded_by_id: int, url: str, link_text: str):
         from .link_attachment import LinkAttachment
+
+        if uploaded_by_id != self.uploaded_by_id:
+            raise ValueError("Only the teacher who created the material can attach links to it.")
         
         return LinkAttachment.create(self.id, UploadArea.MATERIALS, uploaded_by_id, url, link_text)

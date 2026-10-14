@@ -38,10 +38,10 @@
     <label for="description">Description:</label>
     <textarea id="description" name="description">{{ material.description }}</textarea>
     <br><br>
-    <label for="link">Add {% if attachments %}additional {% endif %}link(s) to material:</label>
+    <label for="links">Add {% if attachments %}additional {% endif %}link(s) to material:</label>
     <textarea id="links" name="links" placeholder="Enter one link per line"></textarea>
     <br><br>
-    <label for="file">Add {% if attachments %}additional {% endif %}file(s) to material:</label>
+    <label for="files">Add {% if attachments %}additional {% endif %}file(s) to material:</label>
     <input type="file" id="files" name="files" multiple>
     <br><br>
     <button type="submit">Update Material</button>

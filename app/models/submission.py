@@ -47,6 +47,9 @@ class Submission:
         if not classroom:
             raise ValueError("Classroom does not exist.")
 
+        if student.id not in [s.id for s in classroom.get_students()]:
+            raise ValueError("Cannot submit an assignment for a student who is not enrolled in the classroom containing the assignment.")
+
         if not classroom.is_published:
             raise ValueError("Cannot submit assignment for an unpublished classroom.")
 
@@ -89,16 +92,26 @@ class Submission:
         return self
 
     def add_feedback(self, feedback: str):
+        if not self.is_submitted:
+            raise ValueError("Feedback can only be given on a submitted assignment.")
         execute("UPDATE SUBMISSIONS SET feedback = ? WHERE id = ?", (feedback, self.id))
         self.feedback = feedback
         return self
 
     def attach_file(self, uploaded_by_id: int, stored_filename: str, original_filename: str, mime_type: str, file_size_kb: int):
         from .file_attachment import FileAttachment
+
+        if uploaded_by_id != self.student_id:
+            raise ValueError("Only the student who submitted the assignment can attach files to it.")
+
         return FileAttachment.create(self.id, UploadArea.SUBMISSIONS, uploaded_by_id, stored_filename, original_filename, mime_type, file_size_kb)
 
     def attach_link(self, uploaded_by_id: int, url: str, link_text: str):
         from .link_attachment import LinkAttachment
+
+        if uploaded_by_id != self.student_id:
+            raise ValueError("Only the student who submitted the assignment can attach links to it.")
+
         return LinkAttachment.create(self.id, UploadArea.SUBMISSIONS, uploaded_by_id, url, link_text)
     
     def get_attachments(self):

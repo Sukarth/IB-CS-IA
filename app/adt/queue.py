@@ -12,7 +12,7 @@ class Queue:
         return self
 
     def dequeue(self):
-        """Remove first element of the queue and return resulting first element."""
+        """Remove the first element of the queue and return it."""
         return self._list.pop()
 
     def peek(self):

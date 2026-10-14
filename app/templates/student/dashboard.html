@@ -3,14 +3,14 @@
 {% block heading %}Student Dashboard{% endblock %}
 
 {% block content %}
-    <p>This is the student dashboard. Welcome. You are a student.</p>
+    <p>Welcome to your dashboard, {{ g.user.name }}!</p>
 
     <p>Enrolled Classes:</p>
     <ul>
         {% for (class, teacher) in classrooms %}
-            <li>{{ class.name }} | Teacher: {{ teacher.name }}
+            <li>
                 <a href="{{ url_for('student.classroom', classroom_id=class.id) }}">
-                    {{ icon('right_chevron') }}
+                    {{ class.name }} | Teacher: {{ teacher.name }}{{ icon('right_chevron') }}
                 </a>
             </li>
         {% else %}

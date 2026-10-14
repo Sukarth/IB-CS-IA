@@ -16,10 +16,17 @@ def _remaining_effort_hours(assignment: Assignment, student: Student, student_se
     prog_rec = ProgressRecord.get_progress(student, assignment)
     return assignment.effort_hours * student_settings.procrastination_factor - (0 if prog_rec is None else prog_rec.hours_completed)
 
-def _return_phases(assignment: Assignment, procrastination_factor: float):
+def _return_phases(assignment: Assignment, student: Student, procrastination_factor: float):
+    record = ProgressRecord.get_progress(student, assignment)
+    hours_completed = record.hours_completed if record else 0
     queue = Queue()
     for work_chunk in assignment.get_split_effort_hours():
         work_chunk.effort_hours = work_chunk.effort_hours * procrastination_factor
+        if hours_completed >= work_chunk.effort_hours:
+            hours_completed -= work_chunk.effort_hours
+            continue
+        work_chunk.effort_hours -= hours_completed
+        hours_completed = 0
         queue.enqueue(work_chunk)
     return queue
 
@@ -36,7 +43,7 @@ def build_study_schedule(student: Student, HORIZON_DAYS: int = 14):
     if student_settings.exclude_overdue:
         assignments = [a for a in assignments if a.deadline >= datetime.now()]
 
-    phases = {a.id: _return_phases(a, student_settings.procrastination_factor) for a in assignments}
+    phases = {a.id: _return_phases(a, student, student_settings.procrastination_factor) for a in assignments}
     remaining = {a.id: _remaining_effort_hours(a, student, student_settings) for a in assignments}
     plan = {}
     warnings=[]
@@ -75,7 +82,14 @@ def build_study_schedule(student: Student, HORIZON_DAYS: int = 14):
 
     for assignment in assignments:
         if assignment.deadline < datetime.now():
-            warnings.append((assignment.id, WarningType.OVERDUE, f"'{assignment.title}' is overdue. It has been scheduled as soon as possible."))
+            hours_left = _remaining_effort_hours(assignment, student, student_settings)
+
+            if hours_left <= 1e-9:
+                warnings.append((assignment.id, WarningType.OVERDUE, f"'{assignment.title}' is overdue, but can be submitted (you have logged all its hours)."))
+            elif remaining[assignment.id] > 1e-9:
+                warnings.append((assignment.id, WarningType.OVERDUE, f"'{assignment.title}' is overdue. {remaining[assignment.id]:.1f} hours did not fit into the schedule."))
+            else:
+                warnings.append((assignment.id, WarningType.OVERDUE, f"'{assignment.title}' is overdue. It has been scheduled as soon as possible."))
         elif remaining[assignment.id] > 1e-9 and assignment.deadline.date() <= horizon_end:
             warnings.append((assignment.id, WarningType.CANNOT_FINISH, f"'{assignment.title}' cannot be finished before its deadline with your current free hours. {remaining[assignment.id]:.1f} hours could not be scheduled."))
     return StudyPlan(plan, warnings, date.today())

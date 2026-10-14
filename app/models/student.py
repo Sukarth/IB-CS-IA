@@ -1,4 +1,4 @@
-from app.database import execute, query, query_one
+from app.database import query
 from datetime import datetime
 from .user import User
 from .enums import UserRole
