@@ -1,37 +1,31 @@
 # Success Criteria
 
-1. Three user roles are supported: admin, teacher, and student. An admin can generate role-specific activation keys. New users can register with a valid key and are assigned the role configured by the key. Login is email and password-based, with role-appropriate page access enforced throughout the application. Admins can configure and assign students to year groups or grades for organisational purposes (TBD).
+1. Three user roles are supported: admin, teacher, and student. An admin can generate activation keys that grant a specific user role (and a year group for students) upon activation. Activation keys are one-time use, 8 uppercase hexadecimal characters, and are stored in the database only as SHA-256 hashes. An admin can set the validity period of a key to be between 1-365 days upon creation, and can generate keys in batches of up to 100, which are displayed only once after generation, since they are credentials. New users can register with a valid key, a unique email and a password of at least 8 characters (must contain a digit, an uppercase letter, a lowercase letter and a special character), which is stored in the database only as a hashed value (via bcrypt). Login requires the user's email and password. Role-appropriate page access is enforced throughout the application: if a user tries to access a page for a different role, they receive a 403 error page and logged-out users are redirected to the login page. Users can edit their name and email and change their password. Admins can configure and assign students to year groups (grades) for organisational purposes. Admins can activate/deactivate user accounts, and a deactivated user cannot log in and is logged out.
 
-2. Classrooms can be created, edited, and deleted by the teachers who own them. Teachers can add and remove students from their classrooms. Students can view all classrooms they are enrolled in and their associated content.
+2. Classrooms can be created, edited, published/unpublished and deleted (if they have no assignments, submissions, materials, enrolled students or help requests) by the teachers who own them. Teachers can enroll/unenroll active students (account not disabled) from their classrooms. Students can view all published classrooms they are enrolled in and their associated content (materials, assignments).
 
-3. Assignments can be created, edited, and deleted by teachers, with a defined type, deadline date, description, and estimated effort in hours. Each assignment type is implemented as a subclass inheriting from a base `Assignment` class using **OOP inheritance**, with type-specific attributes:
-   - `Essay` -> word limit
-   - `Quiz` -> question count
-   - `Project` -> group size
-   - `ProblemSet` -> number of problems
+3. Assignments can be created, edited, published/unpublished, and deleted (if there are no submissions or help requests) by teachers, with a defined type, deadline (must be a future date during creation), difficulty level (1-5), and estimated effort in hours (a finite number > 0). Each assignment type is implemented as a subclass inheriting from a base `Assignment` class using **OOP inheritance**, with type-specific attributes:
+   - `General` -> no additional attributes
+   - `Essay` -> word limit (0 means no limit)
+   - `Project` -> group size (minimum and maximum; both >= 1 and maximum >= minimum)
+   - `ProblemSet` -> number of problems (0 means not fixed)
 
-   --> TBD
+4. Files (PDFs, images, documents) and links can be uploaded by students to assignments for submission or by teachers to classroom materials. Students can view and download all materials shared in their enrolled classrooms and their own submissions, while teachers can do the same for classroom materials and attachments submitted by students for their assignments. Assignment submissions save versions and can be unsubmitted/resubmitted. At least one file or link is required for each submission, and the teacher can give feedback that is visible to the student. Both materials and submissions have the same 5 files and/or 10 links attachment limit, and a total file attachment(s) size of 30 MB per material/submission. File types and sizes and links are validated by the server on addition.
 
-4. Files (PDFs, images, documents) and links can be uploaded and attached by teachers to individual assignments or to a classroom-level content library. Students can view and download all materials shared in their enrolled classrooms.
-
-5. The status of any assigned homework item can be updated by students to one of: *Not Started* (default), *In Progress*, *Completed*, or *Need Help*. Selecting *Need Help* automatically queues a standard help request in the queue described in criterion 7. An Urgent flag can optionally be added, which moves the request to the priority queue instead. Each status change is timestamped and persisted to the database. Students can also submit files or links as their work for an assignment. Submitted work is viewable by the teacher.
+5. The status of any assigned homework item can be updated by students to either *Not Started* (default) or *In Progress*. The status automatically changes to *Completed* or *Needs Help* when the student creates a submission or a help request respectively.
 
 6. Teachers can view a completion analytics dashboard that contains:
-   - Ranking of students in the classroom by overall homework completion percentage
-   - Assignments listed in ascending order of class completion rate, sorted using a custom **Bubble Sort**.
-      --> does custom implementation help?
-      --> TBD: additional analytics features such as correlation between estimated effort and completion rate, weekly completion trends, etc.
-   - A search feature for searching students and assignments by name that uses a custom **Binary Search** algorithm on a custom sorted list
-      --> which sorting algorithm to use for the sorted list? TBD.
+   - Ranking of students in the classroom by overall homework completion percentage (no. of published, completed assignments ÷ no. of published assignments in the classroom)
+   - Assignments listed in ascending order of class completion rate (no. of students who have completed the assignment ÷ no. of enrolled students)
+   - A search feature for searching students and assignments by name
+   - Estimated vs. average actual hours spent per assignment and their difference
+   - A list of submitted work that has no feedback yet (unreviewed submissions)
 
-7. Help requests can be submitted by students for any assignment and are processed as follows using **Queue** and **Priority Queue** ADTs:
-   - Standard requests are ordered by submission time (**Queue ADT**, FIFO)
-   - Urgent requests are ordered by days remaining until the assignment deadline (**Priority Queue ADT**)
-      - The Queue is implemented internally using a **Linked List ADT**, with each request stored as a node containing a reference to the next request.
-   - Teachers resolve requests in queue order, with each resolved request being dequeued
+7. Help requests can be submitted by students (with an optional urgent flag) for any assignment and are processed using a **Priority Queue** ADT:
+   - Help requests are placed in the priority queue based on a weighted score of the request's age, how close the assignment's deadline is, the assignment's difficulty and wether the request is urgent.
+      - The Queue is implemented internally using a **Priority Linked List ADT**, with each request stored as a node containing a reference to the next request and sorted in descending priority.
+   - Teachers can see unresolved help requests in their order of priority, can open the next request, and write resolution notes to resolve a request, after which it is removed from the priority queue.
 
-8. A personalised day-by-day study schedule can be generated by students after inputting their available daily study hours. The system calculates an urgency score per incomplete assignment (`effort_hours × difficulty ÷ days_remaining` TBD), queues assignments by urgency score using a **Priority Queue ADT**, and allocates them across available days before their deadlines. A warning is displayed for any assignment that cannot be completed in time given the available hours.
+8. Students can input and save their available daily study hours (hours free each weekday: Monday-Sunday, 0-24h per day), procrastination factor (a decimal > 0) and an 'exclude overdue assignments' option; The student's study schedule is then automatically generated for the next 14 days and shown on a month-view calendar with previous/next navigation. An assignment's work is split into assignment type specific work chunks for scheduling (e.g. Essay: Research 40%, Writing 50%, Review and Refinement 10%).
 
-9. *(Extra. TBD.)* Discussion threads can be enabled by teachers on any assignment. Posts are stored and displayed using a **Stack ADT**. The most recently added post appears at the top. Both teachers and students can add posts to enabled threads. Teachers can delete any post.
-
-10. *(Extra. TBD.)* In-app notifications are received by users for key events (e.g. new assignment posted, help request resolved). Notifications are stored and displayed using a **Stack ADT**, with the most recent notification shown first. Users can dismiss notifications, removing them from the top of the stack.
+9. For every day and assignment that is incomplete, the scheduler calculates the assignment's priority using the formula: `priority = remaining_hours - hours_available_before_deadline`, where `remaining_hours = effort_hours x procrastination_factor - hours_logged` and `hours_available_before_deadline` is the student's total available weekday hours until the deadline. The assignments are then ordered based on this priority and placed into a **Priority Queue**, being scheduled across available days before their deadlines. A warning is displayed for any assignment that cannot be completed in time given the available hours (within the schedule's 14 days of planning).

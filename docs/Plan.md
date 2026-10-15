@@ -1,6 +1,8 @@
 <h1 style="text-align: center;">IA Plan - Criterion B</h1>
 
-**Status:** Planned (may change)
+**Status:** Development complete. Testing and evaluation in progress
+
+**Final program name chosen:** Study Tracker
 
 ## Project Steps
 
@@ -11,8 +13,8 @@
     1. If not, go back to 1.1
 3. [x] Think about possible programmatic solutions to the problem and brainstorm features the software may have
 4. [x] Write the proposal about the idea and get it reviewed.
-5. [ ] Consider and apply supervisor's comments.
-6. [ ] Think about and write the success criterion for the software. Get it reviewed and address comments.
+5. [x] Consider and apply supervisor's comments.
+6. [x] Think about and write the success criterion for the software. Get it reviewed and address comments.
 
 ### 2. Planning
 
@@ -24,38 +26,37 @@
 6. [x] Write down the key success criteria for the software
 7. [x] Define the project steps, and write down all the tasks for each step along with checkboxes to keep track of progress. Break the project into development phases in a realistic order.
 8. [x] Write down the development timeline for the project, with estimated hours and timeframes for each task.
-9. [ ] Design the database structure and identify the main entities. Design the ERD for the database.
-10. [ ] Plan the class structure for the OOP parts, identifying the main classes and their attributes and methods. Create UML class diagrams for the OOP design.
-11. [ ] Think about the frontend UI/UX design. Create wireframes and mockups.
-12. [ ] Think about and create a storyboard for the software, showing the user interface and user experience of the software.
+9. [x] Design the database structure and identify the main entities. Design the ERD for the database.
+10. [x] Plan the class structure for the OOP parts, identifying the main classes and their attributes and methods. Create UML class diagrams for the OOP design.
+11. [x] Think about the frontend UI/UX design. Create wireframes and mockups.
+12. [x] Think about and create a storyboard for the software, showing the user interface and user experience of the software.
 13. [ ] Plan the implementation of the key algorithms and data structures, including pseudocode and complexity analysis.
-14. [ ] Think about testing and evaluation methods for the software, including how to test each feature and how to evaluate the software against the success criteria. Include functional tests (against success criteria) and structural tests (testing algorithm correctness). Write down the testing and evaluation plan including the above mentioned information.
-15. [ ] Get plan reviewed and address comments as necessary.
-16. [ ] Update the plan if features are added, removed, or reduced later.
+14. [x] Think about testing and evaluation methods for the software, including how to test each feature and how to evaluate the software against the success criteria. Include functional tests (against success criteria) and structural tests (testing algorithm correctness). Write down the testing and evaluation plan including the above mentioned information.
+15. [x] Get plan reviewed and address comments as necessary.
+16. [x] Update the plan if features are added, removed, or reduced later.
 
 ### 3. Development
 
-1. [ ] Set up development environment (Flask, Python, SQLite, Git repository)
-2. [ ] Initialize database schema based on ERD
-3. [ ] Implement authentication: registration with activation key, login, session management
-4. [ ] Implement role-based access control (admin, teacher, student page restrictions) and user management
-5. [ ] Implement OOP class for assignment types (base Assignment class and subclasses)
-6. [ ] Implement classroom CRUD (create, read, update, delete) operations
-7. [ ] Implement assignment CRUD operations linked to classrooms and assignment classes
-8. [ ] Implement file upload and content library (materials attached to assignments or classrooms)
-9. [ ] Implement student progress tracking and work submission features
-10. [ ] Implement Analytics Dashboard (Bubble Sort & Binary Search algorithms)
-    - [ ] Implement display of completion rates and ranking of students (Bubble Sort)
-    - [ ] Implement searchable student and assignment records (Binary Search)
-11. [ ] Implement Help Request system (Queue, Priority Queue & Linked List ADTs)
-    - [ ] Implement Priority Queue ADT for urgent help requests (ordered by days remaining)
-    - [ ] Implement teacher help request resolution dashboard (dequeue, view, resolve)
-12. [ ] Implement Study Schedule Generator (Priority Queue ADT & urgency algorithm)
-    - [ ] Implement warning system for uncompletable assignments in schedule generator
-13. [ ] (Extra) Implement discussion threads using Stack ADT
-14. [ ] (Extra) Implement notifications panel using Stack ADT
+1. [x] Set up development environment (Flask, Python, SQLite, Git repository)
+2. [x] Initialize database schema based on ERD
+3. [x] Implement authentication: registration with activation key, login, session management
+4. [x] Implement role-based access control (admin, teacher, student page restrictions) and user management
+5. [x] Implement OOP class for assignment types (base Assignment class and subclasses)
+6. [x] Implement classroom CRUD (create, read, update, delete) operations
+7. [x] Implement assignment CRUD operations linked to classrooms and assignment classes
+8. [x] Implement file upload and content library (materials attached to assignments or classrooms)
+9. [x] Implement student progress tracking and work submission features
+10. [x] Implement Analytics Dashboard
+    - [x] Implement ranking of students
+    - [x] Implement searchable student and assignment records
+11. [x] Implement Help Request system (Priority Queue & Priority Linked List ADTs)
+    - [x] Implement Priority Queue ADT for help requests
+    - [x] Implement teacher help request resolution dashboard (view, resolve)
+12. [x] Implement Study Schedule Generator (custom algorithm)
+    - [x] Implement warning system for uncompletable assignments in schedule generator
 15. [ ] Add finishing touches to frontend UI/UX design
-16. [ ] Tidy up and refactor code to improve maintainability where necessary.
+16. [x] Think of the final name for the program
+16. [x] Tidy up and refactor code to improve maintainability where necessary.
 
 ### 4. Testing
 
@@ -63,12 +64,12 @@
     - [ ] Write test cases thar map to each item in the Success Criteria, and evaluate whether the software meets each criterion based on the test results.
     - [ ] Test each core feature individually
     - [ ] Evaluate the overall product against the Success Criteria
-2. [ ] Conduct unit testing on custom algorithms (Bubble sort, Binary search, Scheduler)
-    - [ ] Test the correctness of the algorithms with various inputs, including edge cases (e.g. empty queue, zero days remaining, no available study hours).
+2. [ ] Unit test the scheduling algorithm
+    - [ ] Test correctness with various inputs, including edge cases (e.g. empty queue, zero days remaining, no available study hours).
 3. [ ] Conduct integration testing for all database interactions
 4. [ ] Perform User Acceptance Testing (UAT) with peers/teacher to get feedback on usability.
-5. [ ] Fix bugs found during testing.
-6. [ ] Re-test after each major fix.
+5. [x] Fix bugs found during testing.
+6. [x] Re-test after each major fix.
 7. [ ] Record evidence of successful tests for documentation and video.
 
 ### 5. Evaluation and Finalization
@@ -100,16 +101,14 @@
 | **Phase 2: Core Infrastructure** | Implement authentication: activation keys, registration, login, sessions | 5 | Weeks 5–6 (May 11–24) |
 | | Implement role-based access control and admin user management | 1 | Week 7 (May 25–31) |
 | | Implement classroom CRUD and student enrollment | 4 | Weeks 7–8 (May 25 – Jun 7) |
-| | Implement `Assignment` OOP class hierarchy (base + 4 subclasses) | 2 | Weeks 8–9 (Jun 1–14) |
+| | Implement `Assignment` OOP class hierarchy (base + subclasses) | 2 | Weeks 8–9 (Jun 1–14) |
 | | Implement assignment CRUD, file uploads, and content library | 3 | Weeks 9–10 (Jun 8–21) |
 | | Implement student progress tracking and work submission | 3 | Weeks 10–11 (Jun 15–28) |
-| **Phase 3: Algorithms & ADTs** | Implement help request system: **Queue ADT** + **Priority Queue ADT** (backed by **Linked List ADT**) | 4 | Weeks 12–14 (Jun 29 – Jul 19) |
+| **Phase 3: Algorithms & ADTs** | Implement help request system: **Priority Queue ADT** (backed by **Priority Linked List ADT**) | 4 | Weeks 12–14 (Jun 29 – Jul 19) |
 | | Implement teacher help request resolution dashboard | 4 | Week 14 (Jul 13–19) |
-| | Implement analytics dashboard: **Bubble Sort** + **Binary Search** | 5 | Weeks 15–17 (Jul 20 – Aug 9) |
-| | Implement study schedule generator: urgency algorithm + **Priority Queue ADT** | 4 | Weeks 18–20 (Aug 10–30) |
-| **Phase 4: Stretch Features** | *(Extra)* Implement discussion threads using **Stack ADT** | 4 | Weeks 21–22 (Aug 31 – Sep 13) |
-| | *(Extra)* Implement notifications panel using **Stack ADT** | 4 | Weeks 23–24 (Sep 14–27) |
-| **Phase 5: Testing & Finalization** | Unit test all custom algorithms with edge cases | 2 | Weeks 25–26 (Sep 28 – Oct 11) |
+| | Implement analytics dashboard | 5 | Weeks 15–17 (Jul 20 – Aug 9) |
+| | Implement study schedule generator: custom algorithm + **Priority Queue ADT** | 4 | Weeks 18–20 (Aug 10–30) |
+| **Phase 4: Testing & Finalization** | Unit test all custom algorithms with edge cases | 2 | Weeks 25–26 (Sep 28 – Oct 11) |
 | | Test all features against success criteria; fix bugs | 7 | Weeks 27–28 (Oct 12–25) |
 | | UI/UX polish and final code refactor | 4 | Week 29 (Oct 26 – Nov 1) |
 | | Record demonstration video | 2 | Week 30 (Nov 2–8) |
@@ -127,7 +126,6 @@
 
 2. **Teacher Dashboard**
    - View classrooms
-   - View analytics summary
    - View top help requests
 
 5. **Analytics Page**
@@ -136,9 +134,8 @@
    - Search functionality
 
 6. **Help Queue Page**
-   - Standard queue
    - Priority queue
-   - Request resolution tools
+   - Request resolution
 
 3. **Student Dashboard**
    - View classrooms
@@ -151,22 +148,19 @@
 
 4. **Admin Dashboard**
    - User management
-   - Classroom management
-   - Analytics overview
-   
+   - Activation key management
+
 5. **Classroom Page**
    - View assignments
    - View materials
    - Manage students (teachers)
-   - Access discussion threads
 
 4. **Assignment Page**
    - Assignment details
-   - Attached files and links
+   - Attached files and links (teachers)
    - Update progress and submit work (students)
    - Submission area
    - Help request option
-   - Optional discussion thread
 
 
 ---

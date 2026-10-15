@@ -253,6 +253,8 @@ def create_assignment(classroom_id):
         title = request.form.get('assignment_title', '')
         description = request.form.get('assignment_description', '')
         deadline = request.form.get('assignment_deadline', type=datetime.fromisoformat)
+        if deadline is None:
+            raise ValueError("Please enter a valid deadline.")
         effort_hours = float(request.form.get('assignment_effort_hours', 0, type=float))
         difficulty = int(request.form.get('assignment_difficulty', 0, type=int))
         is_published = request.form.get('assignment_is_published') == 'on'
@@ -261,9 +263,13 @@ def create_assignment(classroom_id):
             raise ValueError("Invalid assignment type.")
 
         assignment_type, fields = ASSIGNMENT_TYPES[type]
-        kwargs = {field: request.form.get(field, type=int) for field in fields}
-        if None in kwargs.values():
-            raise ValueError("Please enter a whole number in every field.")
+        kwargs = {}
+        for field in fields:
+            value = request.form.get(field, type=int)
+            if value is None:
+                raise ValueError(f"Please enter a whole number for {field.replace('_', ' ')}.")
+            kwargs[field] = value
+        
         assignment_type.create(classroom.id, title, description, deadline, effort_hours, difficulty, is_published, **kwargs)
         flash('Assignment created successfully.')
     except ValueError as ve:
@@ -298,13 +304,19 @@ def edit_assignment(assignment_id):
         title = request.form.get('title', '')
         description = request.form.get('description', '')
         deadline = request.form.get('deadline', type=datetime.fromisoformat)
+        if deadline is None:
+            raise ValueError("Please enter a valid deadline.")
         effort_hours = float(request.form.get('effort_hours', 0, type=float))
         difficulty = int(request.form.get('difficulty', 0, type=int))
         is_published = request.form.get('is_published') == 'on'
 
-        kwargs = {field: request.form.get(field, type=int) for field in ASSIGNMENT_TYPES[assignment.TYPE.value][1]}
-        if None in kwargs.values():
-            raise ValueError("Please enter a whole number in every field.")
+        kwargs = {}
+        for field in ASSIGNMENT_TYPES[assignment.TYPE.value][1]:
+            value = request.form.get(field, type=int)
+            if value is None:
+                raise ValueError(f"Please enter a whole number for {field.replace('_', ' ')}.")
+            kwargs[field] = value
+        
         assignment.update(title, description, deadline, effort_hours, difficulty, **kwargs)
 
         if is_published and not assignment.is_published:

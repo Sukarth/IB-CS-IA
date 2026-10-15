@@ -21,3 +21,5 @@ instance/
 uploads/
 *.db
 *.sqlite
+
+misc/
