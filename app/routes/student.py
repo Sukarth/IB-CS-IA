@@ -138,13 +138,15 @@ def submit_assignment(classroom_id, assignment_id):
             parts = urlparse(url)
             if parts.scheme not in ('http', 'https') or not parts.hostname: 
                 raise ValueError("Invalid URL: " + url)
-        if files:
-           check_files(files)
 
         existing_submission = Submission.get_by_student_and_assignment(g.user, assignment)
         existing_attachments = existing_submission.get_attachments() if existing_submission else []
         existing_files = len([i for i in existing_attachments if isinstance(i, FileAttachment)])
         existing_links = len(existing_attachments) - existing_files
+        existing_size_kb = sum(i.file_size_kb for i in existing_attachments if isinstance(i, FileAttachment))
+
+        if files:
+            check_files(files, existing_size_kb)
         
         if existing_links + len(urls) > app.config['MAX_LINKS']:
             raise ValueError(f"Total link attachment limit exceeded. You can attach a maximum of {app.config['MAX_LINKS']} links. You currently have {existing_links} link(s) attached to this assignment.")

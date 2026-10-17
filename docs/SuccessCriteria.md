@@ -5,27 +5,27 @@
 2. Classrooms can be created, edited, published/unpublished and deleted (if they have no assignments, submissions, materials, enrolled students or help requests) by the teachers who own them. Teachers can enroll/unenroll active students (account not disabled) from their classrooms. Students can view all published classrooms they are enrolled in and their associated content (materials, assignments).
 
 3. Assignments can be created, edited, published/unpublished, and deleted (if there are no submissions or help requests) by teachers, with a defined type, deadline (must be a future date during creation), difficulty level (1-5), and estimated effort in hours (a finite number > 0). Each assignment type is implemented as a subclass inheriting from a base `Assignment` class using **OOP inheritance**, with type-specific attributes:
-   - `General` -> no additional attributes
-   - `Essay` -> word limit (0 means no limit)
-   - `Project` -> group size (minimum and maximum; both >= 1 and maximum >= minimum)
-   - `ProblemSet` -> number of problems (0 means not fixed)
+    - `General` -> no additional attributes
+    - `Essay` -> word limit (0 means no limit)
+    - `Project` -> group size (minimum and maximum; both >= 1 and maximum >= minimum)
+    - `ProblemSet` -> number of problems (0 means not fixed)
 
 4. Files (PDFs, images, documents) and links can be uploaded by students to assignments for submission or by teachers to classroom materials. Students can view and download all materials shared in their enrolled classrooms and their own submissions, while teachers can do the same for classroom materials and attachments submitted by students for their assignments. Assignment submissions save versions and can be unsubmitted/resubmitted. At least one file or link is required for each submission, and the teacher can give feedback that is visible to the student. Both materials and submissions have the same 5 files and/or 10 links attachment limit, and a total file attachment(s) size of 30 MB per material/submission. File types and sizes and links are validated by the server on addition.
 
-5. The status of any assigned homework item can be updated by students to either *Not Started* (default) or *In Progress*. The status automatically changes to *Completed* or *Needs Help* when the student creates a submission or a help request respectively.
+5. The status of any assigned homework item can be updated by students to either *Not Started* (default) or *In Progress*. The status automatically changes to *Completed* or *Needs Help* when the student creates a submission or a help request respectively. Students can also log the number of hours spent on an assignment, which is stored in the database and used for analytics and scheduling.
 
 6. Teachers can view a completion analytics dashboard that contains:
-   - Ranking of students in the classroom by overall homework completion percentage (no. of published, completed assignments ÷ no. of published assignments in the classroom)
-   - Assignments listed in ascending order of class completion rate (no. of students who have completed the assignment ÷ no. of enrolled students)
-   - A search feature for searching students and assignments by name
-   - Estimated vs. average actual hours spent per assignment and their difference
-   - A list of submitted work that has no feedback yet (unreviewed submissions)
+    - Ranking of students in the classroom by overall homework completion percentage (no. of published, completed assignments ÷ no. of published assignments in the classroom)
+    - Assignments listed in ascending order of class completion rate (no. of students who have completed the assignment ÷ no. of enrolled students)
+    - A search feature for searching students and assignments by name
+    - Estimated vs. average actual hours spent per assignment and their difference
+    - A list of submitted work that has no feedback yet (unreviewed submissions)
 
 7. Help requests can be submitted by students (with an optional urgent flag) for any assignment and are processed using a **Priority Queue** ADT:
-   - Help requests are placed in the priority queue based on a weighted score of the request's age, how close the assignment's deadline is, the assignment's difficulty and wether the request is urgent.
-      - The Queue is implemented internally using a **Priority Linked List ADT**, with each request stored as a node containing a reference to the next request and sorted in descending priority.
-   - Teachers can see unresolved help requests in their order of priority, can open the next request, and write resolution notes to resolve a request, after which it is removed from the priority queue.
+    - Help requests are placed in the priority queue based on a weighted score of the request's age, how close the assignment's deadline is, the assignment's difficulty and whether the request is urgent.
+        - The Priority Queue is implemented internally using a **Priority Linked List ADT**, with each request stored as a node containing a reference to the next request and sorted in descending priority.
+    - Teachers can see unresolved help requests in their order of priority, can open the next request, and write resolution notes to resolve a request, after which it is removed from the priority queue.
 
-8. Students can input and save their available daily study hours (hours free each weekday: Monday-Sunday, 0-24h per day), procrastination factor (a decimal > 0) and an 'exclude overdue assignments' option; The student's study schedule is then automatically generated for the next 14 days and shown on a month-view calendar with previous/next navigation. An assignment's work is split into assignment type specific work chunks for scheduling (e.g. Essay: Research 40%, Writing 50%, Review and Refinement 10%).
+8. Students can input and save their available daily study hours (hours free each weekday: Monday-Sunday, 0-24h per day), procrastination factor (a decimal > 0) and an 'exclude overdue assignments' option; The student's study schedule is then automatically generated for today and the next 14 days and shown on a month-view calendar with previous/next navigation. An assignment's work is split into assignment type specific work chunks for scheduling (e.g. Essay: Research 40%, Writing 50%, Review and Refinement 10%).
 
 9. For every day and assignment that is incomplete, the scheduler calculates the assignment's priority using the formula: `priority = remaining_hours - hours_available_before_deadline`, where `remaining_hours = effort_hours x procrastination_factor - hours_logged` and `hours_available_before_deadline` is the student's total available weekday hours until the deadline. The assignments are then ordered based on this priority and placed into a **Priority Queue**, being scheduled across available days before their deadlines. A warning is displayed for any assignment that cannot be completed in time given the available hours (within the schedule's 14 days of planning).

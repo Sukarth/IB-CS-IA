@@ -104,11 +104,11 @@ class Classroom:
 
     def get_assignments(self, published_only: bool = False, unpublished_only: bool = False):
         if published_only:
-            rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ? AND is_published = ?", (self.id, True))
+            rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ? AND is_published = ? ORDER BY deadline", (self.id, True))
         elif unpublished_only:
-            rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ? AND is_published = ?", (self.id, False))
+            rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ? AND is_published = ? ORDER BY deadline", (self.id, False))
         else:
-            rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ?", (self.id,))
+            rows = query("SELECT * FROM ASSIGNMENTS WHERE classroom_id = ? ORDER BY deadline", (self.id,))
         return [Assignment._from_row(row) for row in rows]
     
     def get_materials(self):

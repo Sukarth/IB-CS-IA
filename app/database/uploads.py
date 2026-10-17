@@ -8,7 +8,7 @@ from math import ceil
 from app.models.enums import AttachmentType
 from pathlib import Path
 
-def check_files(files):
+def check_files(files, existing_size_kb=0):
     """
     Validates the uploaded files.
     """
@@ -27,8 +27,8 @@ def check_files(files):
         total_size += file_size
         file.stream.seek(0)
 
-    if total_size > app.config['MAX_CONTENT_LENGTH']:
-        raise ValueError(f"Total file(s) size exceeds the maximum limit of {app.config['MAX_CONTENT_LENGTH'] // (1024 * 1024)} MB.")
+    if total_size + existing_size_kb * 1024 > app.config['MAX_CONTENT_LENGTH']:
+        raise ValueError(f"Total file(s) size exceeds the maximum limit of {app.config['MAX_CONTENT_LENGTH'] // (1024 * 1024)} MB per material/submission. {existing_size_kb // 1024} MB of files are already attached. Please remove some files or upload your files to a cloud storage service and attach the link instead.")
     
     for file in files:
         if file.filename == '':
